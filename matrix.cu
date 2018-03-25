@@ -1,6 +1,11 @@
 #include <stdio.h>
+#include <iostream>
 #include <cuda_profiler_api.h>
+#include <cublas_v2.h>
+// #include <thrust/host_vector.h>
+// #include <thrust/device_vector.h>
 
+void gpu_blas_mmul(const float *A, const float *B, float *C, const int m, const int k, const int n);
 void printPageRank(float* pageRank, int n_vertices);
 void printMatrix(float* matrix, int n_vertices);
 
@@ -72,27 +77,84 @@ int main(int argc, char ** args) {
         int i = vertex_to;
         int j = vertex_from;
         // printf("Vertex %d : outgoing weights: %f \n", j, (float)1/outgoingLinks[j]);
-        matrix[i*n_vertices + j] = (float)1/outgoingLinks[j];   
+        /*
+        *   Note: Because BLAS uses internally column-major order storage, the matrix is transposed.
+        *   Ref: https://solarianprogrammer.com/2012/05/31/matrix-multiplication-cuda-cublas-curand-thrust/
+        *        https://www.wikiwand.com/en/Row-_and_column-major_order#/Column-major_order
+        */
+        // matrix[i*n_vertices + j] = (float)1/outgoingLinks[j]; 
+        matrix[j*n_vertices + i] = (float)1/outgoingLinks[j];             
     }
-    // printMatrix(matrix, n_vertices);
+    printf("Current matrix is : \n");
+    printMatrix(matrix, n_vertices);
 
-    // Initialize the pagerank vector
+    // Initialize the pageRank vector and next pageRank vector
     float *pageRank = (float *)malloc(n_vertices * sizeof(float));
+    float *nextPagerank = (float *)calloc(n_vertices, sizeof(float));
     float value = (float) 1 / n_vertices;
     for(int i=0; i<n_vertices; i++) pageRank[i] = value;
-    // printPageRank(pageRank, n_vertices);
+    printf("Current PageRank is : \n");    
+    printPageRank(pageRank, n_vertices);
+
 
     // Allocat memory on GPU
-    float *d_matrix, *d_pagerank;
+    float *d_matrix, *d_pageRank, *d_nextPagerank;
+    // thrust::device_vector<float> d_matrix(n_vertices * n_vertices), d_pageRank(n_vertices * n_vertices), d_nextPagerank(n_vertices * 1);
     cudaMalloc(&d_matrix, n_vertices * n_vertices * sizeof(float));
-    cudaMalloc(&d_pagerank, n_vertices * sizeof(float));
+    cudaMalloc(&d_pageRank, n_vertices * sizeof(float));
+    cudaMalloc(&d_nextPagerank, n_vertices * sizeof(float));
 
+    // Copy memory from CPU to GPU
+    cudaMemcpy(d_matrix, matrix, n_vertices*n_vertices*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_pageRank, pageRank, n_vertices*sizeof(float), cudaMemcpyHostToDevice);
+
+    // Matrix Multiplication
+    // gpu_blas_mmul(thrust::raw_pointer_cast(&d_A[0]), thrust::raw_pointer_cast(&d_B[0]), thrust::raw_pointer_cast(&d_C[0]), nr_rows_A, nr_cols_A, nr_cols_B);
+    gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, n_vertices, n_vertices, n_vertices);
+
+    // Copy the result from GPU back to CPU
+    cudaMemcpy(nextPagerank,d_nextPagerank, n_vertices * sizeof(float), cudaMemcpyDeviceToHost);
+    printf("The next PageRank is : \n");
+    printPageRank(nextPagerank, n_vertices);
+
+    // Free GPU memory
+    cudaFree(d_matrix);
+    cudaFree(d_pageRank);
+    cudaFree(d_nextPagerank);
+
+    // Free CPU memeory
+    free(matrix);
+    free(pageRank);
+    free(nextPagerank);
+
+    return 0;
+
+}
+
+// CUDA BLAS matrixmultiplication 
+// REF:https://solarianprogrammer.com/2012/05/31/matrix-multiplication-cuda-cublas-curand-thrust/
+void gpu_blas_mmul(const float *A, const float *B, float *C, const int m, const int k, const int n) {
+    int lda=m,ldb=k,ldc=m;
+    const float alf = 1;
+    const float bet = 0;
+    const float *alpha = &alf;
+    const float *beta = &bet;
+    
+    // Create a handle for CUBLAS
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    
+    // Do the actual multiplication
+    cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+
+    // Destroy the handle
+    cublasDestroy(handle);
 }
 
 // Print the pagerank
 void printPageRank(float* pageRank, int n_vertices) {
     for(int i=0; i<n_vertices; i++) {
-        printf("Vertex: %d PageRank: %.2f \n", i, pageRank[i]);
+        printf("Vertex: %d PageRank: %.3f \n", i, pageRank[i]);
     } 
     return;
 }
@@ -102,7 +164,9 @@ void printMatrix(float* matrix, int n_vertices) {
     for(int i=0; i<n_vertices; i++) {
         printf("Vertex: %d ", i);
         for(int j=0; j<n_vertices; j++) {
-            printf("%.2f  ", matrix[i*n_vertices + j]);
+            // Note: print the transposed matrix beacuse of Column-major order
+            // printf("%.3f  ", matrix[i*n_vertices + j]);
+            printf("%.3f  ", matrix[j*n_vertices + i]);
         }
         printf("\n");
     }
