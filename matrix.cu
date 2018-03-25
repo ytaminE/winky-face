@@ -41,10 +41,12 @@ int main(int argc, char ** args) {
 
      // Count the number of vertices O(n) time
      while (fscanf(fp, "%u %u", &vertex_from, &vertex_to) != EOF) {
-        if (vertex_from > n_vertices)
+        if (vertex_from > n_vertices) {
             n_vertices = vertex_from;
-        else if (vertex_to > n_vertices)
+        } else if (vertex_to > n_vertices) {
             n_vertices = vertex_to;
+        }
+      	n_edges++;
     }
     n_vertices++;
     printf("Total number of vertices in the graph : %d, ",n_vertices);
@@ -55,6 +57,5 @@ int main(int argc, char ** args) {
     while(fscanf(fp,"%u %u", &vertex_from, &vertex_to) != EOF) {
         outgoingLinks[vertex_from] += 1;
     }
-
-    
+ 
 }
