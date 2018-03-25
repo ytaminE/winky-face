@@ -49,4 +49,12 @@ int main(int argc, char ** args) {
     n_vertices++;
     printf("Total number of vertices in the graph : %d, ",n_vertices);
 
+    // Count the number of outlinks for each vertice
+    unsigned int * outgoingLinks = (unsigned int *) calloc(n_vertices,sizeof(unsigned int));    
+    fseek(fp,0L, SEEK_SET); // Sets the file position of the stream to 0 (beginging of the file)
+    while(fscanf(fp,"%u %u", &vertex_from, &vertex_to) != EOF) {
+        outgoingLinks[vertex_from] += 1;
+    }
+
+    
 }
