@@ -5,7 +5,7 @@
 // #include <thrust/host_vector.h>
 // #include <thrust/device_vector.h>
 
-void gpu_blas_mmul(const float *A, const float *B, float *C, const int m, const int k, const int n);
+void gpu_blas_mmul(const float *A, const float *B, float *C, const int m, const int k, const int n, cublasHandle_t handle);
 void printPageRank(float* pageRank, int n_vertices);
 void printMatrix(float* matrix, int n_vertices);
 
@@ -108,9 +108,16 @@ int main(int argc, char ** args) {
     cudaMemcpy(d_matrix, matrix, n_vertices*n_vertices*sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_pageRank, pageRank, n_vertices*sizeof(float), cudaMemcpyHostToDevice);
 
+    // Create a handle for CUBLAS
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+
     // Matrix Multiplication
     // gpu_blas_mmul(thrust::raw_pointer_cast(&d_A[0]), thrust::raw_pointer_cast(&d_B[0]), thrust::raw_pointer_cast(&d_C[0]), nr_rows_A, nr_cols_A, nr_cols_B);
-    gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, n_vertices, n_vertices, n_vertices);
+    gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, n_vertices, n_vertices, n_vertices, handle);
+
+    // Destroy the handle
+    cublasDestroy(handle);
 
     // Copy the result from GPU back to CPU
     cudaMemcpy(nextPagerank,d_nextPagerank, n_vertices * sizeof(float), cudaMemcpyDeviceToHost);
@@ -133,22 +140,19 @@ int main(int argc, char ** args) {
 
 // CUDA BLAS matrixmultiplication 
 // REF:https://solarianprogrammer.com/2012/05/31/matrix-multiplication-cuda-cublas-curand-thrust/
-void gpu_blas_mmul(const float *A, const float *B, float *C, const int m, const int k, const int n) {
+void gpu_blas_mmul(const float *A, const float *B, float *C, const int m, const int k, const int n, cublasHandle_t handle) {
     int lda=m,ldb=k,ldc=m;
     const float alf = 1;
     const float bet = 0;
     const float *alpha = &alf;
     const float *beta = &bet;
     
-    // Create a handle for CUBLAS
-    cublasHandle_t handle;
-    cublasCreate(&handle);
+
     
     // Do the actual multiplication
     cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
 
-    // Destroy the handle
-    cublasDestroy(handle);
+
 }
 
 // Print the pagerank
