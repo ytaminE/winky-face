@@ -1,4 +1,4 @@
-# Winky-Face
+# Winky-Face :wink:
 ECE1782 CUDA Project - Pagerank
 
 
