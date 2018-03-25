@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <cuda_profiler_api.h>
 
+void printPageRank(float* pageRank, int n_vertices);
 void printMatrix(float* matrix, int n_vertices);
 
 typedef struct vertex vertex;
@@ -70,8 +71,21 @@ int main(int argc, char ** args) {
     }
     // printMatrix(matrix, n_vertices);
 
+    // Initialize the pagerank vector
+    float *pageRank = (float *)malloc(n_vertices * sizeof(float));
+    float value = (float) 1 / n_vertices;
+    for(int i=0; i<n_vertices; i++) pageRank[i] = value;
+    // printPageRank(pageRank, n_vertices);
+
 }
 
+// Print the pagerank
+void printPageRank(float* pageRank, int n_vertices) {
+    for(int i=0; i<n_vertices; i++) {
+        printf("Vertex: %d PageRank: %.2f \n", i, pageRank[i]);
+    } 
+    return;
+}
 
 // Print the matrix
 void printMatrix(float* matrix, int n_vertices) {
