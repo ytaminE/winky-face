@@ -5,7 +5,7 @@
 // #include <thrust/host_vector.h>
 // #include <thrust/device_vector.h>
 
-void gpu_blas_mmul(float *A, float *B, float *C, const float *I, int m, int k, int n, cublasHandle_t handle);
+float* gpu_blas_mmul(float *A, float *B, float *C, const float *I, int m, int k, int n, int n_iterations, cublasHandle_t handle);
 void printPageRank(float* pageRank, int n_vertices);
 void printMatrix(float* matrix, int n_vertices);
 float abs_float(float in);
@@ -65,11 +65,6 @@ int main(int argc, char ** args) {
         outgoingLinks[vertex_from] += 1;
     }
 
-    // Initialize the convergence context
-    unsigned int n_iterations = 3;
-    float alpha = 0.85;
-    float eps   = 0.000001;
-
     // Construct the matrix
     float *matrix;
     matrix = (float *)calloc(n_vertices * n_vertices, sizeof(float)); 
@@ -121,7 +116,8 @@ int main(int argc, char ** args) {
 
     // Matrix Multiplication
     // gpu_blas_mmul(thrust::raw_pointer_cast(&d_A[0]), thrust::raw_pointer_cast(&d_B[0]), thrust::raw_pointer_cast(&d_C[0]), nr_rows_A, nr_cols_A, nr_cols_B);
-    gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, d_addition, n_vertices, n_vertices, n_vertices, handle);
+    int n_iterations = 4;
+    d_nextPagerank = gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, d_addition, n_vertices, n_vertices, n_vertices, n_iterations, handle);
 
     // Destroy the handle
     cublasDestroy(handle);
@@ -147,7 +143,7 @@ int main(int argc, char ** args) {
 
 // CUDA BLAS matrixmultiplication 
 // REF:https://solarianprogrammer.com/2012/05/31/matrix-multiplication-cuda-cublas-curand-thrust/
-void gpu_blas_mmul(float *A, float *B, float *C, const float* I, int m, int k, int n, cublasHandle_t handle) {
+float* gpu_blas_mmul(float *A, float *B, float *C, const float* I, int m, int k, int n, int n_iterations, cublasHandle_t handle) {
     // gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, n_vertices, n_vertices, n_vertices, handle);
     int lda=m,ldb=k,ldc=m;
     const float alf = 1;
@@ -159,8 +155,17 @@ void gpu_blas_mmul(float *A, float *B, float *C, const float* I, int m, int k, i
     float dampling = 0.85;
     float addition = (1-dampling)/m;
     // cublasSscal(handle, m*m, &dampling, A, 1); 
-    cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
-    cublasSaxpy(handle, m, &addition, I, 1, C, 1);
+    for(int i=0; i<n_iterations; i++) {
+        // Formula is   C = addition * I + A * B
+        //   which is  next_pageRank = (1-d)/N * I + matrix * pageRank 
+        cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+        cublasSaxpy(handle, m, &addition, I, 1, C, 1);
+        float* temp = B;
+        B = C;
+        C = temp;
+    }
+
+    return C;
 }
 
 // Print the pagerank
