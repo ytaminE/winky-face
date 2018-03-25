@@ -59,6 +59,11 @@ int main(int argc, char ** args) {
         outgoingLinks[vertex_from] += 1;
     }
 
+    // Initialize the convergence context
+    unsigned int n_iterations = 25;
+    float alpha = 0.85;
+    float eps   = 0.000001;
+
     // Construct the matrix
     float *matrix;
     matrix = (float *)calloc(n_vertices * n_vertices, sizeof(float)); 
@@ -67,7 +72,7 @@ int main(int argc, char ** args) {
         int i = vertex_to;
         int j = vertex_from;
         // printf("Vertex %d : outgoing weights: %f \n", j, (float)1/outgoingLinks[j]);
-        matrix[i*n_vertices + j] = (float)1/outgoingLinks[j];
+        matrix[i*n_vertices + j] = (float)1/outgoingLinks[j];   
     }
     // printMatrix(matrix, n_vertices);
 
@@ -76,6 +81,11 @@ int main(int argc, char ** args) {
     float value = (float) 1 / n_vertices;
     for(int i=0; i<n_vertices; i++) pageRank[i] = value;
     // printPageRank(pageRank, n_vertices);
+
+    // Allocat memory on GPU
+    float *d_matrix, *d_pagerank;
+    cudaMalloc(&d_matrix, n_vertices * n_vertices * sizeof(float));
+    cudaMalloc(&d_pagerank, n_vertices * sizeof(float));
 
 }
 
