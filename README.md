@@ -3,14 +3,36 @@ ECE1782 CUDA Project - Pagerank
 
 
 
+## Experiment Results
+
+
+
+
+
 ## Useful Commands
 
 ```bash
-nvcc .\matrix.cu -o matrix -Xcompiler "/wd 4819" //solve C4819 characters warning 
+// Compile the code and solve C4819 characters warning 
+nvcc .\matrix.cu -o matrix -Xcompiler "/wd 4819" 
+
+// Get runtime summary
 nvprof .\xxx
+
+// Run the programm
+.\matrix .\graph\graph10.gr
+
 ```
 
 
 
-## Experiment Results
+## .gitignore
+
+```
+.gitignore
+*.o
+*.exe
+*.exp
+*.lib
+*.txt
+```
 
