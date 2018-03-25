@@ -5,9 +5,10 @@
 // #include <thrust/host_vector.h>
 // #include <thrust/device_vector.h>
 
-void gpu_blas_mmul(const float *A, const float *B, float *C, const int m, const int k, const int n, cublasHandle_t handle);
+void gpu_blas_mmul(float *A, float *B, float *C, const float *I, int m, int k, int n, cublasHandle_t handle);
 void printPageRank(float* pageRank, int n_vertices);
 void printMatrix(float* matrix, int n_vertices);
+float abs_float(float in);
 
 typedef struct vertex vertex;
  
@@ -65,7 +66,7 @@ int main(int argc, char ** args) {
     }
 
     // Initialize the convergence context
-    unsigned int n_iterations = 25;
+    unsigned int n_iterations = 3;
     float alpha = 0.85;
     float eps   = 0.000001;
 
@@ -83,7 +84,7 @@ int main(int argc, char ** args) {
         *        https://www.wikiwand.com/en/Row-_and_column-major_order#/Column-major_order
         */
         // matrix[i*n_vertices + j] = (float)1/outgoingLinks[j]; 
-        matrix[j*n_vertices + i] = (float)1/outgoingLinks[j];             
+        matrix[j*n_vertices + i] = (float)0.85/outgoingLinks[j];             
     }
     printf("Current matrix is : \n");
     printMatrix(matrix, n_vertices);
@@ -91,22 +92,28 @@ int main(int argc, char ** args) {
     // Initialize the pageRank vector and next pageRank vector
     float *pageRank = (float *)malloc(n_vertices * sizeof(float));
     float *nextPagerank = (float *)calloc(n_vertices, sizeof(float));
+    float *addition = (float *)malloc(n_vertices * sizeof(float));
     float value = (float) 1 / n_vertices;
-    for(int i=0; i<n_vertices; i++) pageRank[i] = value;
+    for(int i=0; i<n_vertices; i++) {
+        pageRank[i] = value;
+        addition[i] = 1;
+    } 
     printf("Current PageRank is : \n");    
     printPageRank(pageRank, n_vertices);
 
 
     // Allocat memory on GPU
-    float *d_matrix, *d_pageRank, *d_nextPagerank;
+    float *d_matrix, *d_pageRank, *d_nextPagerank, *d_addition;
     // thrust::device_vector<float> d_matrix(n_vertices * n_vertices), d_pageRank(n_vertices * n_vertices), d_nextPagerank(n_vertices * 1);
     cudaMalloc(&d_matrix, n_vertices * n_vertices * sizeof(float));
     cudaMalloc(&d_pageRank, n_vertices * sizeof(float));
     cudaMalloc(&d_nextPagerank, n_vertices * sizeof(float));
+    cudaMalloc(&d_addition, n_vertices * sizeof(float));
 
     // Copy memory from CPU to GPU
     cudaMemcpy(d_matrix, matrix, n_vertices*n_vertices*sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_pageRank, pageRank, n_vertices*sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_addition, addition, n_vertices*sizeof(float), cudaMemcpyHostToDevice);
 
     // Create a handle for CUBLAS
     cublasHandle_t handle;
@@ -114,7 +121,7 @@ int main(int argc, char ** args) {
 
     // Matrix Multiplication
     // gpu_blas_mmul(thrust::raw_pointer_cast(&d_A[0]), thrust::raw_pointer_cast(&d_B[0]), thrust::raw_pointer_cast(&d_C[0]), nr_rows_A, nr_cols_A, nr_cols_B);
-    gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, n_vertices, n_vertices, n_vertices, handle);
+    gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, d_addition, n_vertices, n_vertices, n_vertices, handle);
 
     // Destroy the handle
     cublasDestroy(handle);
@@ -140,19 +147,20 @@ int main(int argc, char ** args) {
 
 // CUDA BLAS matrixmultiplication 
 // REF:https://solarianprogrammer.com/2012/05/31/matrix-multiplication-cuda-cublas-curand-thrust/
-void gpu_blas_mmul(const float *A, const float *B, float *C, const int m, const int k, const int n, cublasHandle_t handle) {
+void gpu_blas_mmul(float *A, float *B, float *C, const float* I, int m, int k, int n, cublasHandle_t handle) {
+    // gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, n_vertices, n_vertices, n_vertices, handle);
     int lda=m,ldb=k,ldc=m;
     const float alf = 1;
     const float bet = 0;
     const float *alpha = &alf;
     const float *beta = &bet;
-    
 
-    
     // Do the actual multiplication
+    float dampling = 0.85;
+    float addition = (1-dampling)/m;
+    // cublasSscal(handle, m*m, &dampling, A, 1); 
     cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
-
-
+    cublasSaxpy(handle, m, &addition, I, 1, C, 1);
 }
 
 // Print the pagerank
@@ -175,4 +183,12 @@ void printMatrix(float* matrix, int n_vertices) {
         printf("\n");
     }
     return;
+}
+
+// Get the abs of a float number
+float abs_float(float in) {
+    if (in >= 0)
+      return in;
+    else
+      return -in;
 }
