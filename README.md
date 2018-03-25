@@ -15,6 +15,9 @@ ECE1782 CUDA Project - Pagerank
 // Compile the code and solve C4819 characters warning 
 nvcc .\matrix.cu -o matrix -Xcompiler "/wd 4819" 
 
+// Compile the code with LCUBLAS library
+nvcc .\matrix.cu -lcublas -o matrix -Xcompiler "/wd 4819"
+
 // Get runtime summary
 nvprof .\xxx
 
