@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <cuda_profiler_api.h>
 
+void printMatrix(float* matrix, int n_vertices);
+
 typedef struct vertex vertex;
  
 struct vertex {
@@ -21,12 +23,10 @@ int main(int argc, char ** args) {
     clock_t start = clock();
 
     // Initialize the graph context
-     int i,j;
      unsigned int n_vertices = 0;                   // number of vertices
      unsigned int n_edges = 0;                      // number of edges
      unsigned int vertex_from = 0, vertex_to = 0;   // edge from vertex_from to vertex_to
-     vertex * vertices;                             // a list of vertices in the graph
- 
+
     // Read the graph file
     if (argc != 2) {
         fprintf(stderr,"Please include the path to the graph file.\n");
@@ -49,7 +49,7 @@ int main(int argc, char ** args) {
       	n_edges++;
     }
     n_vertices++;
-    printf("Total number of vertices in the graph : %d, ",n_vertices);
+    // printf("Total number of vertices in the graph : %d \n",n_vertices);
 
     // Count the number of outlinks for each vertice
     unsigned int * outgoingLinks = (unsigned int *) calloc(n_vertices,sizeof(unsigned int));    
@@ -57,5 +57,30 @@ int main(int argc, char ** args) {
     while(fscanf(fp,"%u %u", &vertex_from, &vertex_to) != EOF) {
         outgoingLinks[vertex_from] += 1;
     }
- 
+
+    // Construct the matrix
+    float *matrix;
+    matrix = (float *)calloc(n_vertices * n_vertices, sizeof(float)); 
+    fseek(fp,0L, SEEK_SET); // Sets the file position of the stream to 0 (beginging of the file)
+    while (fscanf(fp, "%u %u", &vertex_from, &vertex_to) != EOF) {
+        int i = vertex_to;
+        int j = vertex_from;
+        // printf("Vertex %d : outgoing weights: %f \n", j, (float)1/outgoingLinks[j]);
+        matrix[i*n_vertices + j] = (float)1/outgoingLinks[j];
+    }
+    // printMatrix(matrix, n_vertices);
+
+}
+
+
+// Print the matrix
+void printMatrix(float* matrix, int n_vertices) {
+    for(int i=0; i<n_vertices; i++) {
+        printf("Vertex: %d ", i);
+        for(int j=0; j<n_vertices; j++) {
+            printf("%.2f  ", matrix[i*n_vertices + j]);
+        }
+        printf("\n");
+    }
+    return;
 }
