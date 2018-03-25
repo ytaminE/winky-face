@@ -35,8 +35,8 @@ int main(int argc, char ** args) {
      unsigned int vertex_from = 0, vertex_to = 0;   // edge from vertex_from to vertex_to
 
     // Read the graph file
-    if (argc != 2) {
-        fprintf(stderr,"Please include the path to the graph file.\n");
+    if (argc != 3) {
+        fprintf(stderr,"Please include the path to the graph file and the number of maximum iterations\n");
             exit(-1);
     } 
 
@@ -45,6 +45,8 @@ int main(int argc, char ** args) {
          fprintf(stderr,"ERROR: Can not open input file.\n");
          exit(-1);
      }
+
+     int n_iterations = atoi(args[2]);
 
      // Count the number of vertices O(n) time
      while (fscanf(fp, "%u %u", &vertex_from, &vertex_to) != EOF) {
@@ -82,7 +84,7 @@ int main(int argc, char ** args) {
         matrix[j*n_vertices + i] = (float)0.85/outgoingLinks[j];             
     }
     printf("Current matrix is : \n");
-    printMatrix(matrix, n_vertices);
+    // printMatrix(matrix, n_vertices);
 
     // Initialize the pageRank vector and next pageRank vector
     float *pageRank = (float *)malloc(n_vertices * sizeof(float));
@@ -94,7 +96,7 @@ int main(int argc, char ** args) {
         addition[i] = 1;
     } 
     printf("Current PageRank is : \n");    
-    printPageRank(pageRank, n_vertices);
+    // printPageRank(pageRank, n_vertices);
 
 
     // Allocat memory on GPU
@@ -116,7 +118,6 @@ int main(int argc, char ** args) {
 
     // Matrix Multiplication
     // gpu_blas_mmul(thrust::raw_pointer_cast(&d_A[0]), thrust::raw_pointer_cast(&d_B[0]), thrust::raw_pointer_cast(&d_C[0]), nr_rows_A, nr_cols_A, nr_cols_B);
-    int n_iterations = 4;
     d_nextPagerank = gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, d_addition, n_vertices, n_vertices, n_vertices, n_iterations, handle);
 
     // Destroy the handle
@@ -165,13 +166,13 @@ float* gpu_blas_mmul(float *A, float *B, float *C, const float* I, int m, int k,
         C = temp;
     }
 
-    return C;
+    return B;
 }
 
 // Print the pagerank
 void printPageRank(float* pageRank, int n_vertices) {
     for(int i=0; i<n_vertices; i++) {
-        printf("Vertex: %d PageRank: %.3f \n", i, pageRank[i]);
+        printf("Vertex: %d PageRank: %.12f \n", i, pageRank[i]);
     } 
     return;
 }
