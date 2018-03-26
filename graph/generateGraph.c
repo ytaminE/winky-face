@@ -10,25 +10,26 @@ int main(int argc, char **argv){
 
   clock_t start = clock();
 
+  //open file for write mode
   FILE* fp = fopen(argv[1], "w");
   if(fp == NULL) {
      perror("File opening failed");
      return EXIT_FAILURE;
   }
 
-  int v_to;
-  int n_vertices = atoi(argv[2]);
+  int vertex_to;
+  int nums_vertices = atoi(argv[2]);
   int max_edges = atoi(argv[3]);
 
   srand(time(0));
-  for(int i = 0; i < n_vertices; i++) {
+  for(int i = 0; i < nums_vertices; i++) {
     int has_edge = rand() % 4;
-    if(has_edge > 0 || i == 0 || i == n_vertices -1) {
+    if(has_edge > 0 || i == 0 || i == nums_vertices -1) {
       int num_of_edges = (rand() % max_edges) + 1;
       for(int j = 0; j < num_of_edges;j++) {
-        v_to = rand() % n_vertices;
-        if (v_to != i) {
-          fprintf(fp, "%d %d\n", i, v_to);
+        vertex_to = rand() % nums_vertices;
+        if (vertex_to != i) {
+          fprintf(fp, "%d %d\n", i, vertex_to);
         }
       }
 
