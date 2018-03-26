@@ -1,19 +1,22 @@
-# paths
-GRAPH_PATH = ./graph/
-
 # tools
 CC = gcc
 RM = rm -frd
 CFLAGS = -g -Wall
 NVCC = nvcc -ccbin clang-3.8 -arch sm_52
 
-TARGET = $(GRAPH_PATH)/generateGraph matrix 
+# paths
+GRAPH = ./graph/generateGraph
+MATRIX = matrix
+
+# target
+TARGET = $(GRAPH) $(MATRIX)
 
 all: $(TARGET)
-$(GRAPH_PATH)/generateGraph: $(GRAPH_PATH)/generateGraph.c
-	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).c
-matrix: matrix.cu
-	$(NVCC) -o matirx matrix.cu 
+
+$(GRAPH): $(GRAPH).c
+	$(CC) $(CFLAGS) -o $(GRAPH) $(GRAPH).c
+$(MATRIX): matrix.cu
+	$(NVCC) -o $(MATRIX) $(MATRIX).cu 
 
 clean:
 	$(RM) $(TARGET) $(TARGET).o $(TARGET).dSYM
