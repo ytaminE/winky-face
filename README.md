@@ -39,4 +39,4 @@ nvprof .\xxx
 *.txt
 ```
 #edited by tianyue
-pagerank_hostalloc_tree: 在host端存储图的vertex+edge数据， convergence函数使用树形的结构相加得到diff，理论上效率会有所提高
+pagerank_hostalloc_tree: 在host端存储图的vertex+edge数据， convergence函数使用树形的结构相加得到diff，理论上和AtomicAdd相比效率会有所提高（实际没有）
