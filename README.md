@@ -56,4 +56,5 @@ nvcc -ccbin clang++-3.8 ./matrix.cu -lcublas -o matrix
 pagerank_tree: ， convergence函数使用树形的结构相加得到diff，理论上和AtomicAdd相比效率会有所提高（实际没有）
 pagerank_thrust: Atomic Add被替换，使用Thrust库实现
 使用1000000*100的数据
+CPU: 22 313 25 559 tree: 8 733 0 101
 
