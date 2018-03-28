@@ -53,5 +53,7 @@ nvcc -ccbin clang++-3.8 ./matrix.cu -lcublas -o matrix
 *.txt
 ```
 #edited by tianyue
-pagerank_hostalloc_tree: 在host端存储图的vertex+edge数据， convergence函数使用树形的结构相加得到diff，理论上和AtomicAdd相比效率会有所提高（实际没有）
+pagerank_tree: ， convergence函数使用树形的结构相加得到diff，理论上和AtomicAdd相比效率会有所提高（实际没有）
 pagerank_thrust: Atomic Add被替换，使用Thrust库实现
+使用1000000*100的数据
+
