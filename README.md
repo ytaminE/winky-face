@@ -15,7 +15,7 @@ ECE1782 CUDA Project - Pagerank
 
 ```bash
 // Compile the code and solve C4819 characters warning in Windows
-nvcc .\matrix.cu -o matrix -Xcompiler "/wd 4819" 
+nvcc .\matrix.cu -o matrix -Xcompiler "/wd 4819"
 
 // Compile the code with LCUBLAS library
 nvcc .\matrix.cu -lcublas -o matrix -Xcompiler "/wd 4819"
@@ -39,7 +39,9 @@ nvcc -ccbin clang++-3.8 ./matrix.cu -lcublas -o matrix
 ./matrix <path to the graph file> <number of iterations>
 ./matrix ./graph/graph10.gr 10
 ```
-
+## MAKE
+$ ./make
+$ ./make clean
 
 
 ## .gitignore
