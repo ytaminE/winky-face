@@ -58,5 +58,6 @@ $ ./make clean
 pagerank_tree: ， convergence函数使用树形的结构相加得到diff，理论上和AtomicAdd相比效率会有所提高（实际没有）
 pagerank_thrust: Atomic Add被替换，使用Thrust库实现
 使用1000000*100的数据
-CPU: 22 313 25 559 tree: 8 733 0 101
+CPU: 22 313 25 559/ 14 476 15 739   PR: 995 1075
+tree: 8 733 0 101
 
