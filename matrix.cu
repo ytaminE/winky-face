@@ -5,20 +5,10 @@
 // #include <thrust/host_vector.h>
 // #include <thrust/device_vector.h>
 
-float* gpu_blas_mmul(float *A, float *B, float *C, const float *I, int m, int k, int n, int n_iterations, cublasHandle_t handle);
+float* gpu_blas_mmul(float *A, float *B, float *C,float *test, int m, int k, int n, int n_iterations, cublasHandle_t handle);
 void printPageRank(float* pageRank, int n_vertices);
 void printMatrix(float* matrix, int n_vertices);
 float abs_float(float in);
-
-typedef struct vertex vertex;
- 
-struct vertex {
-    unsigned int vertex_id;
-    float pagerank;             // current pagerank
-    float pagerank_next;        // used to store the next pagerank
-    unsigned int n_successors;  // number of outlinks
-    vertex ** successors;       // a list of successors
-};
 
 int main(int argc, char ** args) {
     // Initialize the cuda context
@@ -33,6 +23,7 @@ int main(int argc, char ** args) {
      unsigned int n_vertices = 0;                   // number of vertices
      unsigned int n_edges = 0;                      // number of edges
      unsigned int vertex_from = 0, vertex_to = 0;   // edge from vertex_from to vertex_to
+     cudaError_t err = cudaSuccess;
 
     // Read the graph file
     if (argc != 3) {
@@ -58,7 +49,7 @@ int main(int argc, char ** args) {
       	n_edges++;
     }
     n_vertices++;
-    // printf("Total number of vertices in the graph : %d \n",n_vertices);
+    printf("Total number of vertices in the graph : %d \n",n_vertices);
 
     // Count the number of outlinks for each vertice
     unsigned int * outgoingLinks = (unsigned int *) calloc(n_vertices,sizeof(unsigned int));    
@@ -84,19 +75,26 @@ int main(int argc, char ** args) {
         matrix[j*n_vertices + i] = (float)0.85/outgoingLinks[j];             
     }
     printf("Current matrix is : \n");
-    // printMatrix(matrix, n_vertices);
+    printMatrix(matrix, n_vertices);
 
     // Initialize the pageRank vector and next pageRank vector
     float *pageRank = (float *)malloc(n_vertices * sizeof(float));
     float *nextPagerank = (float *)calloc(n_vertices, sizeof(float));
     float *addition = (float *)malloc(n_vertices * sizeof(float));
+    float *test = (float *)malloc(n_vertices * sizeof(float));
     float value = (float) 1 / n_vertices;
+    float add = (float)(1-0.85)/n_vertices;
     for(int i=0; i<n_vertices; i++) {
         pageRank[i] = value;
-        addition[i] = 1;
-    } 
+        addition[i] = add;
+        test[i] = add;
+    }
     printf("Current PageRank is : \n");    
-    // printPageRank(pageRank, n_vertices);
+    printPageRank(pageRank, n_vertices);
+    // printf("Addition: \n");
+    // printPageRank(addition, n_vertices);    
+    // printf("Test: \n");
+    // printPageRank(test, n_vertices);
 
     cudaDeviceSynchronize();
     printf("\n Start allocating memory on device and recording the start time \n");
@@ -128,33 +126,50 @@ int main(int argc, char ** args) {
     }
 
     // Allocat memory on GPU
-    float *d_matrix, *d_pageRank, *d_nextPagerank, *d_addition;
+    float *d_matrix, *d_pageRank, *d_nextPagerank, *d_addition, *d_test;
     // thrust::device_vector<float> d_matrix(n_vertices * n_vertices), d_pageRank(n_vertices * n_vertices), d_nextPagerank(n_vertices * 1);
-    cudaMalloc(&d_matrix, n_vertices * n_vertices * sizeof(float));
-    cudaMalloc(&d_pageRank, n_vertices * sizeof(float));
-    cudaMalloc(&d_nextPagerank, n_vertices * sizeof(float));
-    cudaMalloc(&d_addition, n_vertices * sizeof(float));
-
-    // Copy memory from CPU to GPU
-    cudaMemcpy(d_matrix, matrix, n_vertices*n_vertices*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_pageRank, pageRank, n_vertices*sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_addition, addition, n_vertices*sizeof(float), cudaMemcpyHostToDevice);
+    err = cudaMalloc(&d_matrix, n_vertices * n_vertices * sizeof(float));
+    err = cudaMalloc(&d_pageRank, n_vertices * sizeof(float));
+    err = cudaMalloc(&d_nextPagerank, n_vertices * sizeof(float));
+    err = cudaMalloc(&d_test, n_vertices * sizeof(float));
 
     // Create a handle for CUBLAS
     cublasHandle_t handle;
     cublasCreate(&handle);
 
-    // Matrix Multiplication
-    // gpu_blas_mmul(thrust::raw_pointer_cast(&d_A[0]), thrust::raw_pointer_cast(&d_B[0]), thrust::raw_pointer_cast(&d_C[0]), nr_rows_A, nr_cols_A, nr_cols_B);
-    d_nextPagerank = gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, d_addition, n_vertices, n_vertices, n_vertices, n_iterations, handle);
+    for(int i=0; i<n_iterations; i++) {
+        // Matrix Multiplication
+        // gpu_blas_mmul(thrust::raw_pointer_cast(&d_A[0]), thrust::raw_pointer_cast(&d_B[0]), thrust::raw_pointer_cast(&d_C[0]), nr_rows_A, nr_cols_A, nr_cols_B);
+        
+        // Copy memory from CPU to GPU    
+        err = cudaMemcpy(d_matrix, matrix, n_vertices*n_vertices*sizeof(float), cudaMemcpyHostToDevice);
+        err = cudaMemcpy(d_pageRank, pageRank, n_vertices*sizeof(float), cudaMemcpyHostToDevice);
+        // err = cudaMemcpy(d_test, test, n_vertices*sizeof(float), cudaMemcpyHostToDevice);
+        
+        gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, d_test, n_vertices, n_vertices, n_vertices, n_iterations, handle);
+
+        const float alphaI = 1;
+        err = cudaMalloc(&d_addition, n_vertices * sizeof(float));
+        err = cudaMemcpy(d_addition, addition, n_vertices*sizeof(float), cudaMemcpyHostToDevice);    
+        cublasSaxpy(handle, n_vertices, &alphaI, d_addition, 1, d_nextPagerank, 1);
+
+        // Copy the result from GPU back to CPU
+        err = cudaMemcpy(nextPagerank,d_nextPagerank, n_vertices * sizeof(float), cudaMemcpyDeviceToHost);
+        float *temp = pageRank;
+        pageRank = nextPagerank;
+        nextPagerank = temp;
+    }
 
     // Destroy the handle
     cublasDestroy(handle);
 
-    // Copy the result from GPU back to CPU
-    cudaMemcpy(nextPagerank,d_nextPagerank, n_vertices * sizeof(float), cudaMemcpyDeviceToHost);
+
     printf("The next PageRank is : \n");
-    printPageRank(nextPagerank, n_vertices);
+    printPageRank(pageRank, n_vertices);
+    // printf("Addition: \n");    
+    // printPageRank(addition, n_vertices);    
+    // printf("Test: \n");    
+    // printPageRank(test, n_vertices);
 
     // Record the stop event
     error = cudaEventRecord(stop, NULL);
@@ -199,8 +214,8 @@ int main(int argc, char ** args) {
 
 // CUDA BLAS matrixmultiplication 
 // REF:https://solarianprogrammer.com/2012/05/31/matrix-multiplication-cuda-cublas-curand-thrust/
-float* gpu_blas_mmul(float *A, float *B, float *C, const float* I, int m, int k, int n, int n_iterations, cublasHandle_t handle) {
-    // gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, n_vertices, n_vertices, n_vertices, handle);
+float* gpu_blas_mmul(float *A, float *B, float *C, float *test, int m, int k, int n, int n_iterations, cublasHandle_t handle) {
+    //  gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, d_addition, n_vertices, n_vertices, n_vertices, n_iterations, handle);
     int lda=m,ldb=k,ldc=m;
     const float alf = 1;
     const float bet = 0;
@@ -208,26 +223,45 @@ float* gpu_blas_mmul(float *A, float *B, float *C, const float* I, int m, int k,
     const float *beta = &bet;
 
     // Do the actual multiplication
-    float dampling = 0.85;
-    float addition = (1-dampling)/m;
-    // cublasSscal(handle, m*m, &dampling, A, 1); 
-    for(int i=0; i<n_iterations; i++) {
+    // float addition = (1-dampling)/m;
+    // for(int i=0; i<n_iterations; i++) {
         // Formula is   C = addition * I + A * B
         //   which is  next_pageRank = (1-d)/N * I + matrix * pageRank 
         cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
-        cublasSaxpy(handle, m, &addition, I, 1, C, 1);
-        float* temp = B;
-        B = C;
-        C = temp;
-    }
+        // if (err != CUBLAS_STATUS_SUCCESS)
+        // {
+        //     printf("Error happened when doing matrix multiplication\n");
+        //     exit(EXIT_FAILURE);
+        // }
+        
+        // cudaDeviceSynchronize();
 
-    return B;
+        // err = cublasSaxpy(handle, m, &alphaI, d_addition, 1, C, 1);
+
+
+        // if (err != CUBLAS_STATUS_SUCCESS)
+        // {
+        //     printf("Error happened when adding vector to matrix\n");
+        //     exit(EXIT_FAILURE);
+        // }
+
+        // cudaDeviceSynchronize();
+
+        // float* temp = B;
+        // B = C;
+        // C = temp;
+    // }
+
+    return C;
 }
 
 // Print the pagerank
 void printPageRank(float* pageRank, int n_vertices) {
     for(int i=0; i<n_vertices; i++) {
-        printf("Vertex: %d PageRank: %.12f \n", i, pageRank[i]);
+        // printf("Vertex: %d PageRank: %.26f \n", i, pageRank[i]);        
+        if(pageRank[i] != 0) {
+            printf("Vertex: %d PageRank: %.26f \n", i, pageRank[i]);
+        }
     } 
     return;
 }
@@ -239,7 +273,10 @@ void printMatrix(float* matrix, int n_vertices) {
         for(int j=0; j<n_vertices; j++) {
             // Note: print the transposed matrix beacuse of Column-major order
             // printf("%.3f  ", matrix[i*n_vertices + j]);
-            printf("%.3f  ", matrix[j*n_vertices + i]);
+            // printf("%.9f  ", matrix[j*n_vertices + i]);
+            if(matrix[j*n_vertices + i] != 0) {
+                printf("%.9f  ", matrix[j*n_vertices + i]);
+            }
         }
         printf("\n");
     }
