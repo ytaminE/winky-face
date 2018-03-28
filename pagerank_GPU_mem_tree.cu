@@ -93,8 +93,8 @@ int main(int argc, char ** args) {
 	float *diffs_new_h;
     float * pagerank_h, *pagerank_d, *diffs, *diffs_new;
     float *pagerank_next_d;
-    int * n_successors_h;
-    int * successors_h;             
+    int * n_successors_h, *n_successors_d;
+    int * successors_h, *successors_d;            
     int * successor_offset_h;
     int * successor_offset_d;
 	
@@ -123,13 +123,15 @@ int main(int argc, char ** args) {
 	err = cudaMalloc((void **)&diffs, n_vertices*sizeof(float));
 	err = cudaMalloc((void **)&diffs_new, cbm*sizeof(float));
     err = cudaMalloc((void **)&pagerank_next_d, n_vertices*sizeof(float));
-	err = cudaHostAlloc((void **)&n_successors_h, n_vertices*sizeof(int),cudaHostAllocDefault);
+    n_successors_h = (int *) calloc(n_vertices, sizeof(*n_successors_h));	
+	err = cudaMalloc((void **)&n_successors_d, n_vertices*sizeof(int));
 	
 	successor_offset_h = (int *) malloc(n_vertices * sizeof(*successor_offset_h));
     err = cudaMalloc((void **)&successor_offset_d, n_vertices*sizeof(int));
 	//err = cudaHostAlloc((void **)&successor_offset_h, n_vertices*sizeof(int),cudaHostAllocDefault);
 	
-	err = cudaHostAlloc((void**)&successors_h, n_edges*sizeof(int),cudaHostAllocDefault);
+    successors_h = (int *) malloc(n_edges * sizeof(*successors_h));
+    err = cudaMalloc((void **)&successors_d, n_edges*sizeof(int));
 
     // allocate memory for successor pointers
     int offset = 0, edges = 0;      
@@ -162,16 +164,13 @@ int main(int argc, char ** args) {
     // Get build time and reset start
     cycles_to_build = clock() - start;
     start = clock();
-/************************************************************
-	cudaStream_t stream1;  
-    cudaStreamCreate(&stream1); 
-	cudaStream_t stream2;  
-    cudaStreamCreate(&stream2);
-*********************************************************/		
+		
+    err = cudaMemcpy(n_successors_d, n_successors_h, n_vertices*sizeof(int), cudaMemcpyHostToDevice);
+    err = cudaMemcpy(successors_d, successors_h, n_edges*sizeof(int), cudaMemcpyHostToDevice);
     err = cudaMemcpy(successor_offset_d, successor_offset_h, n_vertices*sizeof(int), cudaMemcpyHostToDevice);
 	
     // Compute the pagerank
-    int n_iterations = 60;
+    int n_iterations = 30;
     int iteration = 0;
     int numOfBlocks = 1;                 
     int threadsPerBlock = 1000;                 
@@ -205,13 +204,13 @@ int main(int argc, char ** args) {
 	//cudaStreamSynchronize(stream1);
 	//cudaStreamSynchronize(stream2);
 		int close11=0;	
-    while(epsilon < diff && iteration < n_iterations) {  //was 23
+    while(epsilon < diff && iteration < n_iterations) { 
 
        // set the dangling value to 0 
         dangling_value_h = 0;
         err = cudaMemcpy(dangling_value2, &dangling_value_h, sizeof(float), cudaMemcpyHostToDevice);     
         // initial parallel pagerank_next computation
-        addToNextPagerankArray<<<numOfBlocks,threadsPerBlock>>>(pagerank_d, pagerank_next_d, n_successors_h, successors_h, successor_offset_d, dangling_value2, n_vertices);
+        addToNextPagerankArray<<<numOfBlocks,threadsPerBlock>>>(pagerank_d, pagerank_next_d, n_successors_d, successors_d, successor_offset_d, dangling_value2, n_vertices);
         /////////cudaStreamSynchronize(stream1);
         // get the dangling value
         err = cudaMemcpy(&dangling_value_h2, dangling_value2, sizeof(float), cudaMemcpyDeviceToHost); 
