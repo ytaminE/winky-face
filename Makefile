@@ -2,23 +2,22 @@
 CC = gcc
 RM = rm -frd
 CFLAGS = -g -Wall
-NVCC = nvcc -ccbin clang-3.8 -arch sm_52
+NVCC = nvcc -ccbin clang++-3.8 -lcublas
 
 # paths
 GRAPH = ./graph/generateGraph
-MATRIX = matrix
-
-# target
-TARGET = $(GRAPH) $(MATRIX)
+TARGET = matrix pagerank_hostalloc_tree pagerank_thrust_add $(GRAPH)
 
 all: $(TARGET)
 
 $(GRAPH): $(GRAPH).c
 	$(CC) $(CFLAGS) -o $(GRAPH) $(GRAPH).c
-$(MATRIX): matrix.cu
-	$(NVCC) -o $(MATRIX) $(MATRIX).cu 
+matrix: matrix.cu
+	$(NVCC) -o matrix matrix.cu
+pagerank_hostalloc_tree: pagerank_hostalloc_tree.cu
+	$(NVCC) -o pagerank_hostalloc_tree pagerank_hostalloc_tree.cu
+pagerank_thrust_add: pagerank_thrust_add.cu
+	$(NVCC) -o pagerank_thrust_add pagerank_thrust_add.cu
 
 clean:
-	$(RM) $(TARGET) $(TARGET).o $(TARGET).dSYM
-
-
+	$(RM) $(TARGET) *~
