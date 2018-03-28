@@ -5,7 +5,7 @@
 // #include <thrust/host_vector.h>
 // #include <thrust/device_vector.h>
 
-float* gpu_blas_mmul(float *A, float *B, float *C,float *test, int m, int k, int n, int n_iterations, cublasHandle_t handle);
+float* gpu_blas_mmul(float *A, float *B, float *C, int m, int k, int n, int n_iterations, cublasHandle_t handle);
 void printPageRank(float* pageRank, int n_vertices);
 void printMatrix(float* matrix, int n_vertices);
 float abs_float(float in);
@@ -81,20 +81,16 @@ int main(int argc, char ** args) {
     float *pageRank = (float *)malloc(n_vertices * sizeof(float));
     float *nextPagerank = (float *)calloc(n_vertices, sizeof(float));
     float *addition = (float *)malloc(n_vertices * sizeof(float));
-    float *test = (float *)malloc(n_vertices * sizeof(float));
     float value = (float) 1 / n_vertices;
     float add = (float)(1-0.85)/n_vertices;
     for(int i=0; i<n_vertices; i++) {
         pageRank[i] = value;
         addition[i] = add;
-        test[i] = add;
     }
     printf("Current PageRank is : \n");    
     printPageRank(pageRank, n_vertices);
     // printf("Addition: \n");
     // printPageRank(addition, n_vertices);    
-    // printf("Test: \n");
-    // printPageRank(test, n_vertices);
 
     cudaDeviceSynchronize();
     printf("\n Start allocating memory on device and recording the start time \n");
@@ -126,12 +122,11 @@ int main(int argc, char ** args) {
     }
 
     // Allocat memory on GPU
-    float *d_matrix, *d_pageRank, *d_nextPagerank, *d_addition, *d_test;
+    float *d_matrix, *d_pageRank, *d_nextPagerank, *d_addition;
     // thrust::device_vector<float> d_matrix(n_vertices * n_vertices), d_pageRank(n_vertices * n_vertices), d_nextPagerank(n_vertices * 1);
     err = cudaMalloc(&d_matrix, n_vertices * n_vertices * sizeof(float));
     err = cudaMalloc(&d_pageRank, n_vertices * sizeof(float));
     err = cudaMalloc(&d_nextPagerank, n_vertices * sizeof(float));
-    err = cudaMalloc(&d_test, n_vertices * sizeof(float));
 
     // Create a handle for CUBLAS
     cublasHandle_t handle;
@@ -144,9 +139,8 @@ int main(int argc, char ** args) {
         // Copy memory from CPU to GPU    
         err = cudaMemcpy(d_matrix, matrix, n_vertices*n_vertices*sizeof(float), cudaMemcpyHostToDevice);
         err = cudaMemcpy(d_pageRank, pageRank, n_vertices*sizeof(float), cudaMemcpyHostToDevice);
-        // err = cudaMemcpy(d_test, test, n_vertices*sizeof(float), cudaMemcpyHostToDevice);
         
-        gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, d_test, n_vertices, n_vertices, n_vertices, n_iterations, handle);
+        gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, n_vertices, n_vertices, n_vertices, n_iterations, handle);
 
         const float alphaI = 1;
         err = cudaMalloc(&d_addition, n_vertices * sizeof(float));
@@ -168,8 +162,6 @@ int main(int argc, char ** args) {
     printPageRank(pageRank, n_vertices);
     // printf("Addition: \n");    
     // printPageRank(addition, n_vertices);    
-    // printf("Test: \n");    
-    // printPageRank(test, n_vertices);
 
     // Record the stop event
     error = cudaEventRecord(stop, NULL);
@@ -214,7 +206,7 @@ int main(int argc, char ** args) {
 
 // CUDA BLAS matrixmultiplication 
 // REF:https://solarianprogrammer.com/2012/05/31/matrix-multiplication-cuda-cublas-curand-thrust/
-float* gpu_blas_mmul(float *A, float *B, float *C, float *test, int m, int k, int n, int n_iterations, cublasHandle_t handle) {
+float* gpu_blas_mmul(float *A, float *B, float *C, int m, int k, int n, int n_iterations, cublasHandle_t handle) {
     //  gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, d_addition, n_vertices, n_vertices, n_vertices, n_iterations, handle);
     int lda=m,ldb=k,ldc=m;
     const float alf = 1;
