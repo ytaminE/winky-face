@@ -2,7 +2,7 @@
 #include <time.h>
 #include <cuda_runtime.h>
 #include <cuda_profiler_api.h>
-#define  damping_factor 0.85
+#define  damping_factor 0.9
 #define  thread_num 128
 #define  block_num ((n_vertices + thread_num-1)/thread_num)
 #define  ctm 1024
@@ -93,8 +93,8 @@ int main(int argc, char ** args) {
 	float *diffs_new_h;
     float * pagerank_h, *pagerank_d, *diffs, *diffs_new;
     float *pagerank_next_d;
-    int * n_successors_h, *n_successors_d;
-    int * successors_h, *successors_d;            
+    int * n_successors_h;
+    int * successors_h;             
     int * successor_offset_h;
     int * successor_offset_d;
 	
@@ -123,15 +123,12 @@ int main(int argc, char ** args) {
 	err = cudaMalloc((void **)&diffs, n_vertices*sizeof(float));
 	err = cudaMalloc((void **)&diffs_new, cbm*sizeof(float));
     err = cudaMalloc((void **)&pagerank_next_d, n_vertices*sizeof(float));
-    n_successors_h = (int *) calloc(n_vertices, sizeof(*n_successors_h));	
-	err = cudaMalloc((void **)&n_successors_d, n_vertices*sizeof(int));
+	err = cudaHostAlloc((void **)&n_successors_h, n_vertices*sizeof(int),cudaHostAllocDefault);
 	
 	successor_offset_h = (int *) malloc(n_vertices * sizeof(*successor_offset_h));
     err = cudaMalloc((void **)&successor_offset_d, n_vertices*sizeof(int));
-	//err = cudaHostAlloc((void **)&successor_offset_h, n_vertices*sizeof(int),cudaHostAllocDefault);
 	
-    successors_h = (int *) malloc(n_edges * sizeof(*successors_h));
-    err = cudaMalloc((void **)&successors_d, n_edges*sizeof(int));
+	err = cudaHostAlloc((void**)&successors_h, n_edges*sizeof(int),cudaHostAllocDefault);
 
     // allocate memory for successor pointers
     int offset = 0, edges = 0;      
@@ -163,14 +160,11 @@ int main(int argc, char ** args) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Get build time and reset start
     cycles_to_build = clock() - start;
-    start = clock();
-		
-    err = cudaMemcpy(n_successors_d, n_successors_h, n_vertices*sizeof(int), cudaMemcpyHostToDevice);
-    err = cudaMemcpy(successors_d, successors_h, n_edges*sizeof(int), cudaMemcpyHostToDevice);
+    start = clock();	
     err = cudaMemcpy(successor_offset_d, successor_offset_h, n_vertices*sizeof(int), cudaMemcpyHostToDevice);
 	
     // Compute the pagerank
-    int n_iterations = 30;
+    int n_iterations = 60;
     int iteration = 0;
     int numOfBlocks = 1;                 
     int threadsPerBlock = 1000;                 
@@ -200,18 +194,14 @@ int main(int argc, char ** args) {
     err = cudaMemcpy(dangling_value2, &dangling_value_h, sizeof(float), cudaMemcpyHostToDevice);
 
     initializePagerankArray<<<numOfBlocks,threadsPerBlock>>>(pagerank_d, pagerank_next_d, n_vertices);
-	
-	//cudaStreamSynchronize(stream1);
-	//cudaStreamSynchronize(stream2);
-		int close11=0;	
-    while(epsilon < diff && iteration < n_iterations) { 
+
+    while(epsilon < diff && iteration < n_iterations) {  //was 23
 
        // set the dangling value to 0 
         dangling_value_h = 0;
         err = cudaMemcpy(dangling_value2, &dangling_value_h, sizeof(float), cudaMemcpyHostToDevice);     
         // initial parallel pagerank_next computation
-        addToNextPagerankArray<<<numOfBlocks,threadsPerBlock>>>(pagerank_d, pagerank_next_d, n_successors_d, successors_d, successor_offset_d, dangling_value2, n_vertices);
-        /////////cudaStreamSynchronize(stream1);
+        addToNextPagerankArray<<<numOfBlocks,threadsPerBlock>>>(pagerank_d, pagerank_next_d, n_successors_h, successors_h, successor_offset_d, dangling_value2, n_vertices);
         // get the dangling value
         err = cudaMemcpy(&dangling_value_h2, dangling_value2, sizeof(float), cudaMemcpyDeviceToHost); 
         // final parallel pagerank_next computation
@@ -220,15 +210,9 @@ int main(int argc, char ** args) {
 		//cudaMemset(d_diff, 0, sizeof(float) );
 		cudaMemset(diffs_new, 0, cbm*sizeof(float) );
         setPagerankArrayFromNext<<<numOfBlocks,threadsPerBlock>>>(pagerank_d, pagerank_next_d, n_vertices, diffs);
-				clock_t start1;
-		clock_t close1;
-
-		start1 = clock();
 
 		convergence<<<cbm,ctm>>>(diffs, diffs_new, n_vertices);
-		close1 =clock()-start1;
-		close11+=close1;
-		printf("Add  %d    ",close11);
+
 		cudaMemcpy(diffs_new_h, diffs_new, sizeof(float) * cbm, cudaMemcpyDeviceToHost);
 		/*
 		for (i = 0; i < cbm; i++) {
@@ -277,3 +261,4 @@ int main(int argc, char ** args) {
     printf("Done\n");
     return 0;
 }
+
