@@ -2,11 +2,11 @@
 #include <time.h>
 #include <cuda_runtime.h>
 #include <cuda_profiler_api.h>
-#define  damping_factor 0.9
+#define  damping_factor 0.85
 #define  thread_num 128
-#define block_num ((n_vertices + thread_num-1)/thread_num)
-#define ctm 1024
-#define cbm 32768
+#define  block_num ((n_vertices + thread_num-1)/thread_num)
+#define  ctm 1024
+#define  cbm 32768
 
 __global__ void initializePagerankArray(float * pagerank_d,float * pagerank_next_d, int n_vertices) {
     int i = (blockIdx.x * blockDim.x) + threadIdx.x;
