@@ -16,8 +16,7 @@ int main(int argc, char ** args) {
     cudaProfilerStart();
 
     // Start CPU timer
-    // clock_t cycles_to_build, cycles_to_calc;
-    // clock_t start = clock();
+    clock_t cycles_to_calc;
 
     // Initialize the graph context
      unsigned int n_vertices = 0;                   // number of vertices
@@ -121,6 +120,8 @@ int main(int argc, char ** args) {
         exit(EXIT_FAILURE);
     }
 
+    clock_t startTime = clock();
+
     // Allocat memory on GPU
     float *d_matrix, *d_pageRank, *d_nextPagerank, *d_addition;
     // thrust::device_vector<float> d_matrix(n_vertices * n_vertices), d_pageRank(n_vertices * n_vertices), d_nextPagerank(n_vertices * 1);
@@ -133,15 +134,15 @@ int main(int argc, char ** args) {
     cublasCreate(&handle);
 
     for(int i=0; i<n_iterations; i++) {
-        // Matrix Multiplication
-        // gpu_blas_mmul(thrust::raw_pointer_cast(&d_A[0]), thrust::raw_pointer_cast(&d_B[0]), thrust::raw_pointer_cast(&d_C[0]), nr_rows_A, nr_cols_A, nr_cols_B);
         
         // Copy memory from CPU to GPU    
         err = cudaMemcpy(d_matrix, matrix, n_vertices*n_vertices*sizeof(float), cudaMemcpyHostToDevice);
         err = cudaMemcpy(d_pageRank, pageRank, n_vertices*sizeof(float), cudaMemcpyHostToDevice);
         
+        // Matrix Multiplication        
         gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, n_vertices, n_vertices, n_vertices, n_iterations, handle);
 
+        // Add addition vector
         const float alphaI = 1;
         err = cudaMalloc(&d_addition, n_vertices * sizeof(float));
         err = cudaMemcpy(d_addition, addition, n_vertices*sizeof(float), cudaMemcpyHostToDevice);    
@@ -153,6 +154,9 @@ int main(int argc, char ** args) {
         pageRank = nextPagerank;
         nextPagerank = temp;
     }
+
+    clock_t endTime = clock();
+
 
     // Destroy the handle
     cublasDestroy(handle);
@@ -189,7 +193,11 @@ int main(int argc, char ** args) {
         exit(EXIT_FAILURE);
     }
     printf("Time= %.3f msec\n",msecTotal);
-    
+
+    cycles_to_calc = endTime - startTime;
+    long double calc_msec = cycles_to_calc;
+    printf("Time to calc: %.32f milliseconds\n", calc_msec);
+
     // Free GPU memory
     cudaFree(d_matrix);
     cudaFree(d_pageRank);
@@ -201,7 +209,6 @@ int main(int argc, char ** args) {
     free(nextPagerank);
 
     return 0;
-
 }
 
 // CUDA BLAS matrixmultiplication 
@@ -220,6 +227,7 @@ float* gpu_blas_mmul(float *A, float *B, float *C, int m, int k, int n, int n_it
         // Formula is   C = addition * I + A * B
         //   which is  next_pageRank = (1-d)/N * I + matrix * pageRank 
         cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+        // cublasSgemmBatched(handle, CUBLAS_OP_N, CUBLAS_OP_N, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc, 2);
         // if (err != CUBLAS_STATUS_SUCCESS)
         // {
         //     printf("Error happened when doing matrix multiplication\n");
