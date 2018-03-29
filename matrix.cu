@@ -141,12 +141,14 @@ int main(int argc, char ** args) {
         
         // Matrix Multiplication        
         gpu_blas_mmul(d_matrix, d_pageRank, d_nextPagerank, n_vertices, n_vertices, n_vertices, n_iterations, handle);
+        cudaDeviceSynchronize();
 
         // Add addition vector
         const float alphaI = 1;
         err = cudaMalloc(&d_addition, n_vertices * sizeof(float));
         err = cudaMemcpy(d_addition, addition, n_vertices*sizeof(float), cudaMemcpyHostToDevice);    
         cublasSaxpy(handle, n_vertices, &alphaI, d_addition, 1, d_nextPagerank, 1);
+        cudaDeviceSynchronize();
 
         // Copy the result from GPU back to CPU
         err = cudaMemcpy(nextPagerank,d_nextPagerank, n_vertices * sizeof(float), cudaMemcpyDeviceToHost);
