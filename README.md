@@ -71,12 +71,36 @@ tree: 8 733 0 101
 
 ## Test
 ### Test Data
+```
+100 50/100/200
+1000 50/100/200
+10000 50/100/200
+100000 50/100/200
+1000000 50/100
+
+./matrix
+./matirxCPU
+./pagerank_CPU_benchmark
+./pagerank_GPU_benchmark
+./pagerank_atomicadd
+./pagerank_hostalloc_tree
+```
 [1000000_100](https://drive.google.com/file/d/1m1hft2GEgFITecf5JK80-Wbzex-F_JcM/view)
+### Hardware(eecg)
+Intel(R) Core(TM) i7-4790 CPU @ 3.60GHz
+```
+// show more info about CPU
+./lscpu
+```
+NVIDIA Corporation GM204 [GeForce GTX 980]
+```
+// show more info about GPU
+./nvidia-smi -q
+```
 
 ## Final
 ### ppt
 [pagerank](https://docs.google.com/presentation/d/1DNdbA-ElAMaXhMcv2pCWXuujh0ByWkPNHcJpvMKqrg8/edit#slide=id.g362d662672_0_25)
 ### report
-
 ## Reference
 [CUDA_Image_Encryption, by Tong Zou, Jing Wang](https://github.com/DracoZT/CUDA_Image_Encryption)
