@@ -45,7 +45,7 @@ nvcc -ccbin clang++-3.8 ./matrix.cu -lcublas -o matrix
 ./matrix <path to the graph file> <number of iterations>
 ./matrix ./graph/graph10.gr 10
 ```
-## MAKE
+#### MAKE
 ./make
 ./make clean
 
@@ -66,3 +66,9 @@ pagerank_thrust: Atomic Add被替换，使用Thrust库实现
 CPU: 22 313 25 559/ 14 476 15 739   PR: 995 1075
 tree: 8 733 0 101
 
+## Test
+### Test Data
+[1000000x100](https://drive.google.com/file/d/1m1hft2GEgFITecf5JK80-Wbzex-F_JcM/view)
+
+## Reference
+[CUDA_Image_Encryption, by Tong Zou, Jing Wang](https://github.com/DracoZT/CUDA_Image_Encryption)
