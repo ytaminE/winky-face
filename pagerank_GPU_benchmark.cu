@@ -142,7 +142,7 @@ int main(int argc, char ** args) {
 /*************************************************************************/
     // Start CPU timer
     clock_t cycles_to_build, cycles_to_calc;
-    clock_t start = clock();
+
 
 /*************************************************************************/
     // build up the graph
@@ -169,7 +169,7 @@ int main(int argc, char ** args) {
 	}
     }
     n_vertices++;
-
+    clock_t start = clock();
     // allocate memory for vertices
     err = cudaMallocManaged((void **)&vertices, n_vertices*sizeof(vertex));
 
