@@ -27,7 +27,7 @@ int main(int argc, char ** args) {
 
     // Start CPU timer
     clock_t cycles_to_build, cycles_to_calc;
-    clock_t start = clock();
+
 
     // build up the graph
     int i,j;
@@ -53,7 +53,7 @@ int main(int argc, char ** args) {
 	}
     }
     n_vertices++;
-
+    clock_t start = clock();
     // allocate memory for vertices
     vertices = (vertex *)malloc(n_vertices*sizeof(vertex));
     if (!vertices) {
