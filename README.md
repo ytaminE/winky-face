@@ -36,7 +36,6 @@ nvprof .\xxx
 ```
 
 #### Linux (eecg)
-
 ```bash
 // To Compile
 nvcc -ccbin clang++-3.8 ./matrix.cu -lcublas -o matrix
@@ -46,8 +45,12 @@ nvcc -ccbin clang++-3.8 ./matrix.cu -lcublas -o matrix
 ./matrix ./graph/graph10.gr 10
 ```
 #### MAKE
+```
+// Compile all
 ./make
+// Clean all compiled files
 ./make clean
+```
 
 ## .gitignore
 
@@ -68,7 +71,12 @@ tree: 8 733 0 101
 
 ## Test
 ### Test Data
-[1000000x100](https://drive.google.com/file/d/1m1hft2GEgFITecf5JK80-Wbzex-F_JcM/view)
+[1000000_100](https://drive.google.com/file/d/1m1hft2GEgFITecf5JK80-Wbzex-F_JcM/view)
+
+## Final
+### ppt
+[pagerank](https://docs.google.com/presentation/d/1DNdbA-ElAMaXhMcv2pCWXuujh0ByWkPNHcJpvMKqrg8/edit#slide=id.g362d662672_0_25)
+### report
 
 ## Reference
 [CUDA_Image_Encryption, by Tong Zou, Jing Wang](https://github.com/DracoZT/CUDA_Image_Encryption)
