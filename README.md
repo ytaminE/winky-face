@@ -85,7 +85,8 @@ tree: 8 733 0 101
 ./pagerank_atomicadd
 ./pagerank_hostalloc_tree
 ```
-[1000000_100](https://drive.google.com/file/d/1m1hft2GEgFITecf5JK80-Wbzex-F_JcM/view)
+[test data archives](https://drive.google.com/drive/folders/1wK5NBYzm4pglYipjxyf7UYYFuBKYtxDy?usp=sharing)
+
 ### Hardware(eecg)
 Intel(R) Core(TM) i7-4790 CPU @ 3.60GHz
 ```
