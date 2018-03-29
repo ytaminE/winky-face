@@ -46,9 +46,8 @@ nvcc -ccbin clang++-3.8 ./matrix.cu -lcublas -o matrix
 ./matrix ./graph/graph10.gr 10
 ```
 ## MAKE
-$ ./make
-$ ./make clean
-
+./make
+./make clean
 
 ## .gitignore
 
