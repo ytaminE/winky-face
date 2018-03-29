@@ -5,7 +5,13 @@ ECE1782 CUDA Project - Pagerank
 
 ## Experiment Results
 
+### Matrix
 
+|             | Number of Vertices | Maximum number of edges per vertex | CPU Time | GPU Time  |
+| ----------- | ------------------ | ---------------------------------- | -------- | --------- |
+| graph100_20 | 100                | 20                                 | 1ms      | 356.152us |
+| graph500_20 | 500                | 20                                 | 20ms     | 8.4748ms  |
+| graph800_20 | 800                | 20                                 | 65ms     | 30.692ms  |
 
 
 
