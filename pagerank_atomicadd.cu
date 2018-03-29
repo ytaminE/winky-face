@@ -63,7 +63,7 @@ int main(int argc, char ** args) {
     
     // Start CPU timer
     clock_t cycles_to_build, cycles_to_calc;
-    clock_t start = clock();
+
 
     // build up the graph
     int i;
@@ -96,7 +96,7 @@ int main(int argc, char ** args) {
 	n_edges++;
     }
     n_vertices++;
-    
+     clock_t start = clock();   
     // Allocate flattened data structure host and device memory
     pagerank_h = (float *) malloc(n_vertices * sizeof(*pagerank_h));
     err = cudaMalloc((void **)&pagerank_d, n_vertices*sizeof(float));
