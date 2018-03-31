@@ -84,6 +84,7 @@ tree: 8 733 0 101
 ./pagerank_GPU_benchmark
 ./pagerank_atomicadd
 ./pagerank_hostalloc_tree
+./pagerank_SOA              edited on 2018/03/31 by tianyue SOA new data structure.
 ```
 [test data archives(download here)](https://drive.google.com/drive/folders/1wK5NBYzm4pglYipjxyf7UYYFuBKYtxDy?usp=sharing)
 
