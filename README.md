@@ -82,6 +82,10 @@ pagerank_tree: ， convergence函数使用树形的结构相加得到diff，理�
 ./pagerank_atomicadd
 ./pagerank_hostalloc_tree
 ./pagerank_SOA              edited on 2018/03/31 by tianyue SOA new data structure.
+
+About vertex based solutions:
+Performance expectation: atomicadd > hostalloc_tree > SOA > GPU_benchmark > CPU_benchmark
+Maximum data handled: pagerank_atomicadd < else
 ```
 [test data archives(download here)](https://drive.google.com/drive/folders/1wK5NBYzm4pglYipjxyf7UYYFuBKYtxDy?usp=sharing)
 
