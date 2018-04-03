@@ -66,29 +66,40 @@ nvcc -ccbin clang++-3.8 ./matrix.cu -lcublas -o matrix
 pagerank_tree: ， convergence函数使用树形的结构相加得到diff，理论上和AtomicAdd相比效率会有所提高（实际没有）
 使用1000000*100的数据
 
-## Test
-### Test Data
+## Test and Measure
+### Input
+#### Parameters
 ```
-100 50/100/200
+100 50/100/200 # drop this group as not obvious differences could be observed 
 1000 50/100/200
 10000 50/100/200
 100000 50/100/200
 1000000 50/100
-
+```
+#### Functions
+```
 ./matrix
 ./matirxCPU
 ./pagerank_CPU_benchmark
 ./pagerank_GPU_benchmark
 ./pagerank_atomicadd
 ./pagerank_hostalloc_tree
-./pagerank_SOA              edited on 2018/03/31 by tianyue SOA new data structure.
+./pagerank_SOA             
 
 About vertex based solutions:
 Performance expectation: atomicadd > hostalloc_tree > SOA > GPU_benchmark > CPU_benchmark
 Maximum data handled: pagerank_atomicadd < else
 ```
+### Measure
+#### notes
+- 5 loops for each 
+- 
+### Output
+#### Downloadable 
+```
 [test data archives(download here)](https://drive.google.com/drive/folders/1wK5NBYzm4pglYipjxyf7UYYFuBKYtxDy?usp=sharing)
-
+[test results table](https://drive.google.com/open?id=1LqACv5q-qA_eOEFhVH_HKdWxzU3T7qQl)
+```
 ### Hardware(eecg)
 Intel(R) Core(TM) i7-4790 CPU @ 3.60GHz
 ```
