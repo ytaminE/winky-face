@@ -96,10 +96,10 @@ Maximum data handled: pagerank_atomicadd < else
 - 
 ### Output
 #### Downloadable 
-```
 [test data archives(download here)](https://drive.google.com/drive/folders/1wK5NBYzm4pglYipjxyf7UYYFuBKYtxDy?usp=sharing)
+
 [test results table](https://drive.google.com/open?id=1LqACv5q-qA_eOEFhVH_HKdWxzU3T7qQl)
-```
+
 ### Hardware(eecg)
 Intel(R) Core(TM) i7-4790 CPU @ 3.60GHz
 ```
