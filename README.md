@@ -93,8 +93,8 @@ Maximum data handled: pagerank_atomicadd < else
 ### Measure
 #### notes
 - 5 loops for each 
-- 
-### Output
+- using "./top" to monitor current processes to make sure that all computing resources are avaibale 
+### Output 
 #### Downloadable 
 [test data archives(download here)](https://drive.google.com/drive/folders/1wK5NBYzm4pglYipjxyf7UYYFuBKYtxDy?usp=sharing)
 
