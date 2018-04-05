@@ -1,7 +1,7 @@
-#### 看完请删除下面两句话
+#### 看完请删除
 #### 测试结果和晚上测试的不符：晚上测试1000000x50 CPU需要15秒左右，100000x200在4秒左右，怀疑测试环境不稳定，CPU不会这么快
 #### Pagerank_GPU 和 Pagerank_SOA速度过慢是因为使用了meminfo等不必要的函数，已修正
-
+#### 预计的结果: atomicadd > ~~hostalloc_tree~~ > CPU_benchmark > SOA > GPU_benchmark 
 # Winky-Face :wink:
 ECE1782 CUDA Project - Pagerank
 
@@ -91,7 +91,7 @@ pagerank_tree: ， convergence函数使用树形的结构相加得到diff，理�
 ./pagerank_SOA             
 
 About vertex based solutions:
-Performance expectation: atomicadd > hostalloc_tree > SOA > GPU_benchmark > CPU_benchmark
+
 Maximum data handled: pagerank_atomicadd < else
 ```
 ### Measure
