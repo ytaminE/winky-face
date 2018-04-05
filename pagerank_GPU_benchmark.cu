@@ -129,14 +129,14 @@ int main(int argc, char ** args) {
         exit(-1);
     } 
 
-    size_t mem_total = 0;
-    size_t mem_free = 0;
+    //size_t mem_total = 0;
+    //size_t mem_free = 0;
 
     cudaFree(0); // Initialize the cuda context
     // Error code to check return values for CUDA calls
     cudaError_t err = cudaSuccess;
 
-    cudaMemGetInfo(&mem_free, &mem_total);
+    //cudaMemGetInfo(&mem_free, &mem_total);
     printf("1. mem_total: %zu, mem_free: %zu\n",mem_total, mem_free);
 
 /*************************************************************************/
@@ -187,19 +187,19 @@ int main(int argc, char ** args) {
     printf("sizeof(vertex*): %d\n", sizeof(vertex*));
     printf("sizeof(vertex): %d\n", sizeof(vertex));
 
-    cudaMemGetInfo(&mem_free, &mem_total);
+    //cudaMemGetInfo(&mem_free, &mem_total);
     printf("mem_total: %zu, mem_free: %zu\n",mem_total, mem_free);
     // allocate memory for successor pointers
     for (i=0; i<n_vertices; i++) {
         vertices[i].vertex_id = i;
         if (vertices[i].n_successors > 0) {
             err = cudaMallocManaged((void***)&vertices[i].successors,vertices[i].n_successors*sizeof(vertex*));
-	    cudaMemGetInfo(&mem_free, &mem_total);
+	    //cudaMemGetInfo(&mem_free, &mem_total);
 	    cudaDeviceSynchronize();
     	    //printf("i:%d, mem_total: %zu, mem_free: %zu\n",i, mem_total, mem_free);
             if (!vertices[i].successors) {
                 fprintf(stderr,"cudaMallocManaged failed for vertex %d successors (error: %s)\n",i,cudaGetErrorString(err));
-		cudaMemGetInfo(&mem_free, &mem_total);
+		//cudaMemGetInfo(&mem_free, &mem_total);
 	    	cudaDeviceSynchronize();
     	    	printf("i:%d, mem_total: %zu, mem_free: %zu\n",i, mem_total, mem_free);
                 exit(-1);
@@ -340,4 +340,3 @@ int main(int argc, char ** args) {
     printf("Done\n");
     return 0;
 }
-
