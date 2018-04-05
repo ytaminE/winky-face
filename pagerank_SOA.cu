@@ -128,15 +128,13 @@ int main(int argc, char ** args) {
         exit(-1);
     } 
 
-    size_t mem_total = 0;
-    size_t mem_free = 0;
+    //size_t mem_total = 0;
+    //size_t mem_free = 0;
 
     cudaFree(0); // Initialize the cuda context
     // Error code to check return values for CUDA calls
     cudaError_t err = cudaSuccess;
 
-    cudaMemGetInfo(&mem_free, &mem_total);
-    printf("1. mem_total: %zu, mem_free: %zu\n",mem_total, mem_free);
 
 /*************************************************************************/
     // Start CPU timer
@@ -183,38 +181,36 @@ int main(int argc, char ** args) {
     //    exit(-1);
     //}
     //memset((void *)vertices, 0, (size_t)(n_vertices*sizeof(vertex)));
-	memset((void *)vertices.vertex_id, 0, (size_t)(n_vertices*sizeof(vertices.vertex_id)));
-    memset((void *)vertices.pagerank, 0, (size_t)(n_vertices*sizeof(vertices.pagerank)));
-	memset((void *)vertices.pagerank_next, 0, (size_t)(n_vertices*sizeof(vertices.pagerank_next)));
-	memset((void *)vertices.n_successors, 0, (size_t)(n_vertices*sizeof(vertices.n_successors)));
-	memset((void *)vertices.successors, 0, (size_t)(n_vertices*sizeof(vertices.successors)));
+	//memset((void *)vertices.vertex_id, 0, (size_t)(n_vertices*sizeof(vertices.vertex_id)));
+    //memset((void *)vertices.pagerank, 0, (size_t)(n_vertices*sizeof(vertices.pagerank)));
+	//memset((void *)vertices.pagerank_next, 0, (size_t)(n_vertices*sizeof(vertices.pagerank_next)));
+	//memset((void *)vertices.n_successors, 0, (size_t)(n_vertices*sizeof(vertices.n_successors)));
+	//memset((void *)vertices.successors, 0, (size_t)(n_vertices*sizeof(vertices.successors)));
 	
     // parse input file to count the number of successors of each vertex
     fseek(fp, 0L, SEEK_SET);
     while (fscanf(fp, "%u %u", &vertex_from, &vertex_to) != EOF) {
         vertices.n_successors[vertex_from]++;
     }
-    printf("sizeof(vertex*): %d\n", sizeof(vertex*));
-    printf("sizeof(vertex): %d\n", sizeof(vertex));
+    //printf("sizeof(vertex*): %d\n", sizeof(vertex*));
+    //printf("sizeof(vertex): %d\n", sizeof(vertex));
 
-    cudaMemGetInfo(&mem_free, &mem_total);
-    printf("mem_total: %zu, mem_free: %zu\n",mem_total, mem_free);
     // allocate memory for successor pointers
     for (i=0; i<n_vertices; i++) {
         vertices.vertex_id[i] = i;
         if (vertices.n_successors[i] > 0) {
             err = cudaMallocManaged((void***)&vertices.successors[i],vertices.n_successors[i]*sizeof(unsigned int*));
-	    cudaMemGetInfo(&mem_free, &mem_total);
+	    //cudaMemGetInfo(&mem_free, &mem_total);
 	    cudaDeviceSynchronize();
     	    //printf("i:%d, mem_total: %zu, mem_free: %zu\n",i, mem_total, mem_free);
             if (!vertices.successors[i]) {
                 fprintf(stderr,"cudaMallocManaged failed for vertex %d successors (error: %s)\n",i,cudaGetErrorString(err));
-		cudaMemGetInfo(&mem_free, &mem_total);
+		//cudaMemGetInfo(&mem_free, &mem_total);
 	    	cudaDeviceSynchronize();
-    	    	printf("i:%d, mem_total: %zu, mem_free: %zu\n",i, mem_total, mem_free);
+    	    	//printf("i:%d, mem_total: %zu, mem_free: %zu\n",i, mem_total, mem_free);
                 exit(-1);
             }
-            memset((void *)vertices.successors[i], 0, (size_t)(vertices.n_successors[i]*sizeof(unsigned int *)));
+            //memset((void *)vertices.successors[i], 0, (size_t)(vertices.n_successors[i]*sizeof(unsigned int *)));
         }
         else
             vertices.successors[i] = NULL;
@@ -316,10 +312,7 @@ int main(int argc, char ** args) {
     // Print CPU time
     int calc_msec = cycles_to_calc * 1000 / CLOCKS_PER_SEC;
 
-    // print the pagerank values computed on the GPU
-    for (i=0;i<n_vertices;i++) {
-        printf("AFTER GPU | Vertex %u:\tpagerank = %.6f\n", i, vertices.pagerank[i]);
-    }
+
     
 	
     printf("Time to build: %d seconds, %d milliseconds\n", build_msec/1000, build_msec%1000);
