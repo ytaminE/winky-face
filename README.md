@@ -1,6 +1,6 @@
-## 看完请删除下面两句话
-## 测试的问题！例如：1000000x50 CPU需要15秒左右，怀疑测试环境不稳定，CPU不会这么快
-## Pagerank_GPU 和 Pagerank_SOA速度过慢是因为使用了meminfo等不必要的函数，已修正
+#### 看完请删除下面两句话
+#### 测试的问题！例如：1000000x50 CPU需要15秒左右，100000x200在4秒左右，怀疑测试环境不稳定，CPU不会这么快
+#### Pagerank_GPU 和 Pagerank_SOA速度过慢是因为使用了meminfo等不必要的函数，已修正
 
 # Winky-Face :wink:
 ECE1782 CUDA Project - Pagerank
