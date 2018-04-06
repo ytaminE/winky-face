@@ -6,7 +6,7 @@ NVCC = nvcc -ccbin clang++-3.8 -lcublas
 
 # paths
 GRAPH = ./graph/generateGraph
-TARGET = matrix matrixCPU pagerank_hostalloc_tree pagerank_SOA pagerank_atomicadd $(GRAPH) pagerank_CPU_benchmark pagerank_GPU_benchmark pagerank_array_offset
+TARGET = matrix matrixCPU pagerank_hostalloc_tree pagerank_SOA $(GRAPH) pagerank_CPU_benchmark pagerank_GPU_benchmark pagerank_array_offset
 
 all: $(TARGET)
 
@@ -16,8 +16,6 @@ matrix: matrix.cu
 	$(NVCC) -o matrix matrix.cu
 matrixCPU: matrixCPU.cu
 	$(NVCC) -o matrixCPU matrixCPU.cu
-pagerank_atomicadd: pagerank_atomicadd.cu
-	$(NVCC) -o pagerank_atomicadd pagerank_atomicadd.cu
 pagerank_CPU_benchmark: pagerank_CPU_benchmark.cu
 	$(NVCC) -o pagerank_CPU_benchmark pagerank_CPU_benchmark.cu
 pagerank_GPU_benchmark: pagerank_GPU_benchmark.cu
