@@ -17,6 +17,9 @@ int main(int argc, char ** args) {
 
     // Start CPU timer
     clock_t cycles_to_calc;
+    clock_t cycles_to_build;
+
+    clock_t startBuildTime = clock();
 
     // Initialize the graph context
      unsigned int n_vertices = 0;                   // number of vertices
@@ -91,36 +94,37 @@ int main(int argc, char ** args) {
     // printf("Addition: \n");
     // printPageRank(addition, n_vertices);    
 
-    cudaDeviceSynchronize();
-    printf("\n Start allocating memory on device and recording the start time \n");
-    cudaEvent_t start;
-    cudaError_t error;
-    error = cudaEventCreate(&start);
-    if (error != cudaSuccess)
-    {
-        fprintf(stderr, "Failed to create start event (error code %s)!\n", cudaGetErrorString(error));
-        exit(EXIT_FAILURE);
-    }
+    // cudaDeviceSynchronize();
+    // printf("\n Start allocating memory on device and recording the start time \n");
+    // cudaEvent_t start;
+    // cudaError_t error;
+    // error = cudaEventCreate(&start);
+    // if (error != cudaSuccess)
+    // {
+    //     fprintf(stderr, "Failed to create start event (error code %s)!\n", cudaGetErrorString(error));
+    //     exit(EXIT_FAILURE);
+    // }
 
-    cudaEvent_t stop;
-    error = cudaEventCreate(&stop);
+    // cudaEvent_t stop;
+    // error = cudaEventCreate(&stop);
 
-    if (error != cudaSuccess)
-    {
-        fprintf(stderr, "Failed to create stop event (error code %s)!\n", cudaGetErrorString(error));
-        exit(EXIT_FAILURE);
-    }
+    // if (error != cudaSuccess)
+    // {
+    //     fprintf(stderr, "Failed to create stop event (error code %s)!\n", cudaGetErrorString(error));
+    //     exit(EXIT_FAILURE);
+    // }
 
-    // Record the start event
-    error = cudaEventRecord(start, NULL);
+    // // Record the start event
+    // error = cudaEventRecord(start, NULL);
 
-    if (error != cudaSuccess)
-    {
-        fprintf(stderr, "Failed to record start event (error code %s)!\n", cudaGetErrorString(error));
-        exit(EXIT_FAILURE);
-    }
+    // if (error != cudaSuccess)
+    // {
+    //     fprintf(stderr, "Failed to record start event (error code %s)!\n", cudaGetErrorString(error));
+    //     exit(EXIT_FAILURE);
+    // }
 
     clock_t startTime = clock();
+    cycles_to_build = startTime - startBuildTime;
 
     // Allocat memory on GPU
     float *d_matrix, *d_pageRank, *d_nextPagerank, *d_addition;
@@ -169,36 +173,43 @@ int main(int argc, char ** args) {
     // printf("Addition: \n");    
     // printPageRank(addition, n_vertices);    
 
-    // Record the stop event
-    error = cudaEventRecord(stop, NULL);
-    if (error != cudaSuccess)
-    {
-        fprintf(stderr, "Failed to record stop event (error code %s)!\n", cudaGetErrorString(error));
-        exit(EXIT_FAILURE);
-    }
+    // // Record the stop event
+    // error = cudaEventRecord(stop, NULL);
+    // if (error != cudaSuccess)
+    // {
+    //     fprintf(stderr, "Failed to record stop event (error code %s)!\n", cudaGetErrorString(error));
+    //     exit(EXIT_FAILURE);
+    // }
 
-    // Wait for the stop event to complete
-    error = cudaEventSynchronize(stop);
+    // // Wait for the stop event to complete
+    // error = cudaEventSynchronize(stop);
 
-    if (error != cudaSuccess)
-    {
-        fprintf(stderr, "Failed to synchronize on the stop event (error code %s)!\n", cudaGetErrorString(error));
-        exit(EXIT_FAILURE);
-    }
+    // if (error != cudaSuccess)
+    // {
+    //     fprintf(stderr, "Failed to synchronize on the stop event (error code %s)!\n", cudaGetErrorString(error));
+    //     exit(EXIT_FAILURE);
+    // }
 
-    float msecTotal = 0.0f;
-    error = cudaEventElapsedTime(&msecTotal, start, stop);
+    // float msecTotal = 0.0f;
+    // error = cudaEventElapsedTime(&msecTotal, start, stop);
     
-    if (error != cudaSuccess)
-    {
-        fprintf(stderr, "Failed to get time elapsed between events (error code %s)!\n", cudaGetErrorString(error));
-        exit(EXIT_FAILURE);
-    }
-    printf("Time= %.3f msec\n",msecTotal);
+    // if (error != cudaSuccess)
+    // {
+    //     fprintf(stderr, "Failed to get time elapsed between events (error code %s)!\n", cudaGetErrorString(error));
+    //     exit(EXIT_FAILURE);
+    // }
+    // printf("Time= %.3f msec\n",msecTotal);
 
     cycles_to_calc = endTime - startTime;
-    long double calc_msec = cycles_to_calc;
-    printf("Time to calc: %.32f milliseconds\n", calc_msec);
+    int build_milli = cycles_to_build * 1000 / CLOCKS_PER_SEC;
+    int calc_milli = cycles_to_calc * 1000 / CLOCKS_PER_SEC;
+    printf("Time to build: %d seconds, %d milliseconds\n",build_milli/1000, build_milli%1000);
+    printf("Time to calc: %d seconds, %d milliseconds\n",calc_milli/1000, calc_milli%1000);
+
+    // long double calc_msec = cycles_to_calc;
+    // long double build_msec = cycles_to_build;
+    // printf("Time to build: %.32f milliseconds\n", build_msec);
+    // printf("Time to calc: %.32f milliseconds\n", calc_msec);
 
     // Free GPU memory
     cudaFree(d_matrix);
