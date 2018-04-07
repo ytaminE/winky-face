@@ -17,7 +17,9 @@ int main(int argc, char ** args) {
 
     // Start CPU timer
     clock_t cycles_to_calc;
+    clock_t cycles_to_build;
 
+    clock_t startBuildTime = clock();
     // Initialize the graph context
      unsigned int n_vertices = 0;                   // number of vertices
      unsigned int n_edges = 0;                      // number of edges
@@ -80,7 +82,7 @@ int main(int argc, char ** args) {
     printPageRank(pageRank, n_vertices);
 
     clock_t startTime = clock();
-
+    cycles_to_build = startTime - startBuildTime;
 
 
     for(int i=0; i<n_iterations; i++) {
@@ -101,10 +103,16 @@ int main(int argc, char ** args) {
 
     printf("The next PageRank is : \n");
     printPageRank(pageRank, n_vertices);
-    
+
     cycles_to_calc = endTime - startTime;
-    long double calc_msec = cycles_to_calc;
-    printf("Time to calc: %.32f milliseconds\n", calc_msec);
+    int build_milli = cycles_to_build * 1000 / CLOCKS_PER_SEC;
+    int calc_milli = cycles_to_calc * 1000 / CLOCKS_PER_SEC;
+    printf("Time to build: %d seconds, %d milliseconds\n",build_milli/1000, build_milli%1000);
+    printf("Time to calc: %d seconds, %d milliseconds\n",calc_milli/1000, calc_milli%1000);
+
+    // cycles_to_calc = endTime - startTime;
+    // long double calc_msec = cycles_to_calc;
+    // printf("Time to calc: %.32f milliseconds\n", calc_msec);
 
     // Free CPU memeory
     free(matrix);
