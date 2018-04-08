@@ -17,7 +17,7 @@ struct vertex {
 
 
 __global__ void initializePageranks(vertex * vertices, int n_vertices) {
-    int i = (blockIdx.x * blockDim.x) + threadIdx.x; 
+    int i = (blockIdx.x * blockDim.x) + threadIdx.x;
 
     if (i < n_vertices) {
         vertices[i].pagerank = 1.0/(float)n_vertices;
@@ -27,7 +27,7 @@ __global__ void initializePageranks(vertex * vertices, int n_vertices) {
 
 
 __global__ void addToNextPagerank(vertex * vertices, float * dangling_value, int n_vertices) {
-    int i = (blockIdx.x * blockDim.x) + threadIdx.x; 
+    int i = (blockIdx.x * blockDim.x) + threadIdx.x;
     int j;
 
     if(i < n_vertices) {
@@ -65,9 +65,9 @@ __global__ void convergence(vertex * vertices, float * reduced_sums_d, int n_ver
     int i_thr = threadIdx.x;
 
     __shared__ float sums[1024];                       // blockDim.x == 1024
-    
-    float temp1, temp2;    
-    
+
+    float temp1, temp2;
+
     if(i < 1024) {
         reduced_sums_d[i] = 0;
     }
@@ -110,16 +110,16 @@ __global__ void convergence(vertex * vertices, float * reduced_sums_d, int n_ver
 __global__ void getConvergence(float * reduced_sums_d, float * diff) {
     int j, index, index2;
     index = threadIdx.x;
-    
+
     for(j = 0; j < 10; j++) {                    // 10 times as 2^10 = 1024 threads
         if((index+1) % (2 * (1 << j)) == 0) {    // Note: 1 << j == 2^j
             index2 = index - (1 << j);
             reduced_sums_d[index] += reduced_sums_d[index2];
         }
         __syncthreads();
-    }    
+    }
 
-    *diff = reduced_sums_d[1023]; 
+    *diff = reduced_sums_d[1023];
 }
 
 
@@ -127,7 +127,7 @@ int main(int argc, char ** args) {
     if (argc != 2) {
 	fprintf(stderr,"Wrong number of args. Provide input graph file.\n");
         exit(-1);
-    } 
+    }
 
     //size_t mem_total = 0;
     //size_t mem_free = 0;
@@ -137,7 +137,7 @@ int main(int argc, char ** args) {
     cudaError_t err = cudaSuccess;
 
     //cudaMemGetInfo(&mem_free, &mem_total);
-    printf("1. mem_total: %zu, mem_free: %zu\n",mem_total, mem_free);
+    //rintf("1. mem_total: %zu, mem_free: %zu\n",mem_total, mem_free);
 
 /*************************************************************************/
     // Start CPU timer
@@ -230,10 +230,10 @@ int main(int argc, char ** args) {
     // Get time for building data structure
     cycles_to_build = clock() - start;
     int build_msec = cycles_to_build * 1000 / CLOCKS_PER_SEC;
-    
-    //Reset time 
+
+    //Reset time
     start = clock();
-   
+
 
   /*************************************************************************/
     // compute the pagerank on the GPU
@@ -243,7 +243,7 @@ int main(int argc, char ** args) {
     int converge_blocks = (n_vertices + 2048 - 1)/2048;
     if(converge_blocks == 0) {
         converge_blocks =1;
-    }           
+    }
 
 
     if(n_vertices <= 1024) {
@@ -252,7 +252,7 @@ int main(int argc, char ** args) {
     } else {
         threadsPerBlock = 1024;
         numOfBlocks = (n_vertices + 1023)/1024;   // The "+ 1023" ensures we round up
-    }   
+    }
 
 
     float dangling_value_h = 0;
@@ -270,36 +270,36 @@ int main(int argc, char ** args) {
 
     // Initialize pagerank and pagerank_next values
     initializePageranks<<<numOfBlocks,threadsPerBlock>>>(vertices, n_vertices);
-    cudaDeviceSynchronize(); 
- 
+    cudaDeviceSynchronize();
+
     int iteration = 0;
     while(epsilon < h_diff  && iteration < n_iterations) {
-        // set the dangling value to 0 
+        // set the dangling value to 0
         dangling_value_h = 0;
         err = cudaMemcpy(dangling_value_d, &dangling_value_h, sizeof(float), cudaMemcpyHostToDevice);
-        
+
         // initial parallel pagerank_next computation
         addToNextPagerank<<<numOfBlocks,threadsPerBlock>>>(vertices, dangling_value_d, n_vertices);
 
         // get the dangling value
         err = cudaMemcpy(&dangling_value_h, dangling_value_d, sizeof(float), cudaMemcpyDeviceToHost);
- 
+
         // final parallel pagerank_next computation
         finalPagerankForIteration<<<numOfBlocks,threadsPerBlock>>>(vertices, n_vertices, dangling_value_h);
 
         convergence<<<converge_blocks, 1024>>>(vertices, reduced_sums_d, n_vertices);
         getConvergence<<<1,1024>>>(reduced_sums_d, d_diff);
-        
+
         // Get difference to compare to epsilon
         cudaMemcpy(&h_diff, d_diff, sizeof(float), cudaMemcpyDeviceToHost);
-        
+
         // Set pagerank = pagerank_next; And then pagerank_next = 0;
         setPageranksFromNext<<<numOfBlocks,threadsPerBlock>>>(vertices, n_vertices);
-        
+
         iteration++;
     }
     cudaDeviceSynchronize();
-    
+
     // End CPU Timer
     cycles_to_calc = clock() - start;
 
@@ -310,13 +310,13 @@ int main(int argc, char ** args) {
     for (i=0;i<n_vertices;i++) {
         //printf("AFTER GPU | Vertex %u:\tpagerank = %.6f\n", i, vertices[i].pagerank);
     }
-    
+
     printf("Time to build: %d seconds, %d milliseconds\n", build_msec/1000, build_msec%1000);
     printf("Time to calc: %d seconds, %d milliseconds\n", calc_msec/1000, calc_msec%1000);
     printf("Iteration: %d\n", iteration);
 
-/*****************************************************************************************/ 
-  
+/*****************************************************************************************/
+
     // Free device global memory
     // err = cudaFree(d_A);
 

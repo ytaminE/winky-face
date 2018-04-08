@@ -20,12 +20,12 @@ pagerank_CPU_benchmark: pagerank_CPU_benchmark.cu
 	$(NVCC) -o pagerank_CPU_benchmark pagerank_CPU_benchmark.cu
 pagerank_GPU_benchmark: pagerank_GPU_benchmark.cu
 	$(NVCC) -o pagerank_GPU_benchmark pagerank_GPU_benchmark.cu
+pagerank_array_offset: pagerank_array_offset.cu
+	$(NVCC) -o pagerank_array_offset pagerank_array_offset.cu
 pagerank_hostalloc_tree: pagerank_hostalloc_tree.cu
 	$(NVCC) -o pagerank_hostalloc_tree pagerank_hostalloc_tree.cu
 pagerank_SOA: pagerank_SOA.cu
 	$(NVCC) -o pagerank_SOA pagerank_SOA.cu
-pagerank_array_offset: pagerank_array_offset.cu
-	$(NVCC) -o pagerank_array_offset pagerank_array_offset.cu
 
 clean:
 	$(RM) $(TARGET) *~
