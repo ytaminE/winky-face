@@ -58,27 +58,6 @@ int main(int argc, char ** args) {
         outgoingLinks[vertex_from] += 1;
     }
 
-
-    // // Construct the matrix
-    // float *matrix;
-    // matrix = (float *)calloc(n_vertices * n_vertices, sizeof(float)); 
-    // fseek(fp,0L, SEEK_SET); // Sets the file position of the stream to 0 (beginging of the file)
-    // while (fscanf(fp, "%u %u", &vertex_from, &vertex_to) != EOF) {
-    //     int i = vertex_to;
-    //     int j = vertex_from;
-    //     // printf("Vertex %d : outgoing weights: %f \n", j, (float)1/outgoingLinks[j]);
-    //     /*
-    //     *   Note: Because BLAS uses internally column-major order storage, the matrix is transposed.
-    //     *   Ref: https://solarianprogrammer.com/2012/05/31/matrix-multiplication-cuda-cublas-curand-thrust/
-    //     *        https://www.wikiwand.com/en/Row-_and_column-major_order#/Column-major_order
-    //     */
-    //     // matrix[i*n_vertices + j] = (float)1/outgoingLinks[j]; 
-    //     matrix[j*n_vertices + i] = (float)0.85/outgoingLinks[j];             
-    // }
-    // printf("Current matrix is : \n");
-    // printMatrix(matrix, n_vertices);
-
-
     // initialize matrix
     cusp::array2d<float, cusp::host_memory> matrix(n_vertices,n_vertices);
     fseek(fp,0L, SEEK_SET); // Sets the file position of the stream to 0 (beginging of the file)
@@ -91,20 +70,6 @@ int main(int argc, char ** args) {
     printf("Matrix is : \n");    
     cusp::print(matrix);
 
-
-
-    // // Initialize the pageRank vector and next pageRank vector
-    // float *pageRank = (float *)malloc(n_vertices * sizeof(float));
-    // float *nextPagerank = (float *)calloc(n_vertices, sizeof(float));
-    // float *addition = (float *)malloc(n_vertices * sizeof(float));
-    // float value = (float) 1 / n_vertices;
-    // float add = (float)(1-0.85)/n_vertices;
-    // for(int i=0; i<n_vertices; i++) {
-    //     pageRank[i] = value;
-    //     addition[i] = add;
-    // }
-    // printf("Current PageRank is : \n");    
-    // printPageRank(pageRank, n_vertices);
 
 
     // initialize input vector
@@ -124,12 +89,17 @@ int main(int argc, char ** args) {
     // allocate output vector
     cusp::array1d<float, cusp::host_memory> nextPagerank(n_vertices);
 
-    // compute y = A * x
-    cusp::multiply(matrix, pageRank, nextPagerank);
-    
+    for(int i=0; i<n_iterations; i++) {
+        // compute y = A * x
+        cusp::multiply(matrix, pageRank, nextPagerank);
+        // compute y += 1.5*x
+        cusp::blas::axpy(addition, nextPagerank, 1.0);
+        pageRank.swap(nextPagerank);
+    }
+
     // print nextPagerank
     printf("Next PageRank is : \n");    
-    cusp::print(nextPagerank);
+    cusp::print(pageRank);
     return 0;
     
 }
