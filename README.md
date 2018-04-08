@@ -70,7 +70,7 @@ pagerank_tree: ， convergence函数使用树形的结构相加得到diff，理�
 ### Input
 #### Parameters
 ```
-100 50/100/200 # drop this group as not obvious differences could be observed 
+100 50/100/200 # drop this group as not obvious differences could be observed
 1000 50/100/200
 10000 50/100/200
 100000 50/100/200
@@ -92,18 +92,17 @@ Maximum data handled: pagerank_atomicadd < else
 ```
 ### Measure
 #### notes
-- 5 loops for each 
-- using "./top" to monitor current processes to make sure that all computing resources are avaibale 
-### Output 
-#### Downloadable 
+- 10 loops for each
+- using "./top" to monitor current processes to make sure that all computing resources are available
+- on the early Morning for accuracy
+### Output
+#### Downloadable
 [test data archives(download here)](https://drive.google.com/drive/folders/1wK5NBYzm4pglYipjxyf7UYYFuBKYtxDy?usp=sharing)
 
-[test results table](https://drive.google.com/open?id=1LqACv5q-qA_eOEFhVH_HKdWxzU3T7qQl)
-
-[test raw output](https://drive.google.com/open?id=1lkRBsVK3iXGaffRLih5S6GCZkLNf7u1i)
-
-
-
+*test results are updated*
+[test results table](https://drive.google.com/file/d/12eNUXRoAMZVVQoU1iMkegG34BuiK5BQB/view?usp=sharing)
+[test raw output(5 loops)](https://drive.google.com/open?id=1lkRBsVK3iXGaffRLih5S6GCZkLNf7u1i)
+[test raw output(10 loops)](https://drive.google.com/file/d/1GuzXcNHn8AQ1P1XpuvaHmGznRckE3jhe/view?usp=sharing)
 [matrix_test_results_table](https://docs.google.com/spreadsheets/d/1jsGo_Q_5oBVMeJ-dCmkEsnPyBsyqFZTZfi-oxXjkQ1k/edit?usp=sharing)
 
 ### Hardware(eecg)
