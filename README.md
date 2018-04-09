@@ -40,6 +40,9 @@ nvprof .\xxx
 // To Compile
 nvcc -ccbin clang++-3.8 ./matrix.cu -lcublas -o matrix
 
+// To compile matrixSparse, please include the cusp library
+nvcc -ccbin clang++-3.8 -I ./lib/ ./matrixSparse.cu -o matrixSparse
+
 // To Run
 ./matrix <path to the graph file> <number of iterations>
 ./matrix ./graph/graph10.gr 10
