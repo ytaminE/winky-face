@@ -1,3 +1,5 @@
+# 文档地址https://docs.google.com/document/d/1kndbj2JstYt6JxsBvNEs3N39vql52wgme3pEofy8z3M/edit?ts=5aa32e5f
+
 # Winky-Face :wink:
 ECE1782 CUDA Project - Pagerank
 
