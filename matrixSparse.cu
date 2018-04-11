@@ -17,7 +17,7 @@ int main(int argc, char ** args) {
     clock_t cycles_to_calc;
     clock_t cycles_to_build;
 
-    clock_t startBuildTime = clock();
+    // clock_t startBuildTime = clock();
 
     // Initialize the graph context
      unsigned int n_vertices = 0;                   // number of vertices
@@ -49,6 +49,8 @@ int main(int argc, char ** args) {
     }
     n_vertices++;
     printf("Total number of vertices in the graph : %d \n",n_vertices);
+
+    clock_t startBuildTime = clock();
 
     // Count the number of outlinks for each vertice
     unsigned int * outgoingLinks = (unsigned int *) calloc(n_vertices,sizeof(unsigned int));    
